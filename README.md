@@ -24,3 +24,4 @@ cultiva-plus/
 * Antonio Gabriel Gomes Falcao do Nascimento
 * Rafael Jesus Bezerra Cerqueira
 * Alexandre Roque Pereira Costa
+* Breno Kayan Souza de Azevedo 

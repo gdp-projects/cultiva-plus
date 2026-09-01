@@ -26,7 +26,6 @@ cultiva-plus/
 * Alexandre Roque Pereira Costa
 * Breno Kayan Souza de Azevedo 
 
-
 ## Empresa: GDP Projects
 
 ## Segmento de Atuação
@@ -52,7 +51,6 @@ Reconhecimento como consultoria de desenvolvimento ágil e inovadora, referênci
 *	Automação e Inteligência Artificial: chatbots para atendimento, vendas e suporte operacional
 *	Sistemas sob medida: plataformas de gestão como o Cultiva Plus
 
-
 ## Clientes
 Micro e pequenas empresas de diversos setores, empreendedores individuais e gestores de projetos comunitários.
 
@@ -74,5 +72,3 @@ Atualmente não possui parceiros cadastrados. Estrutura aberta para integração
 2.	Desenvolvimento e Testes: construção iterativa de aplicações web e fluxos de automação
 3.	Implantação e Suporte: publicação de projetos, configuração de hospedagem e manutenção contínua
 4.	Gestão de Relacionamento: prospecção de novos clientes e acompanhamento pós entrega
-
-

@@ -161,3 +161,20 @@ Para que o Cultiva Plus cumpra seu objetivo, identificamos como principais neces
 * Garantir condições para implantação, hospedagem, manutenção e suporte da plataforma.
 
 Com essas necessidades, buscamos desenvolver o **Cultiva Plus** como uma plataforma simples, acessível e colaborativa, capaz de melhorar a organização das hortas comunitárias e facilitar a participação de todos os envolvidos.
+
+## Matriz de Perfis e Permissões
+*   Gestor de Projetos / Administrador Geral (GDP Projects / Responsável pela Horta):
+    * Escopo de Acesso: Controle total e centralizado.
+    * Ações Permitidas: Aprovação de novos membros, concessão e revogação de permissões, gerenciamento e exclusão de hortas/canteiros, visualização de relatórios operacionais completos e logs de auditoria do sistema.
+
+*   Responsável pela Horta (Líder Comunitário Local):
+    * Escopo de Acesso: Restrito à(s) horta(s) sob sua gestão.
+    * Ações Permitidas: Cadastro de canteiros/cultivos, atribuição de tarefas a membros, atualização do status das atividades e moderação da comunicação local.
+
+*   Membro Participante / Morador:
+    * Escopo de Acesso: Consulta e registro operacional básico.
+    * Ações Permitidas: Visualização de hortas públicas/locais, confirmação de presença em mutirões, registro de tarefas concluídas e leitura de dicas de cultivo.
+
+*   Visitante (Não autenticado):
+    * Escopo de Acesso: Somente leitura pública.
+    * Ações Permitidas: Visualização do mapa geral das hortas ativas, objetivos do projeto e página de cadastro/solicitação de entrada.

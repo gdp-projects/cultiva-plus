@@ -162,6 +162,46 @@ Para que o Cultiva Plus cumpra seu objetivo, identificamos como principais neces
 
 Com essas necessidades, buscamos desenvolver o **Cultiva Plus** como uma plataforma simples, acessível e colaborativa, capaz de melhorar a organização das hortas comunitárias e facilitar a participação de todos os envolvidos.
 
+## Arquitetura de Dados (Entrega 1)
+
+Atendendo às diretrizes da **Entrega 1 — Arquitetura de Dados**, esta seção apresenta a visão macro do sistema, o fluxo das informações e a divisão de responsabilidades entre os bancos transacional e analítico.
+
+### A. Mapeamento dos Sistemas (Componentes da Arquitetura)
+Para resolver a descentralização das informações e estruturar a gestão colaborativa, a arquitetura macro do **Cultiva Plus** é composta por:
+
+1. **Plataforma Web (Front-end):** Interface responsiva para moradores, líderes comunitários, gestores e visitantes.
+2. **Sistema Administrativo (Back-end / API):** Camada de serviços responsável pelas regras de negócio e controle da Matriz de Perfis e Permissões.
+3. **Banco de Dados Operacional (OLTP):** Banco relacional para armazenamento de dados dinâmicos em tempo real (cadastros, canteiros, presença em mutirões e tarefas).
+4. **Data Warehouse (OLAP):** Repositório analítico para consolidação do histórico de safras, uso de espaços e engajamento comunitário.
+5. **Sistema de BI & Relatórios:** Módulo para geração de dashboards e relatórios operacionais para a GDP Projects e líderes locais.
+6. **Infraestrutura e Nuvem:** Provedores de hospedagem web, manutenção e suporte para integração com APIs externas.
+
+### B. Desenho do Fluxo de Dados
+O fluxo a seguir mapeia a circulação da informação entre os componentes do sistema:
+
+```mermaid
+flowchart TD
+    A[Usuários: Visitantes / Moradores / Líderes Locais] -->|Acesso via Browser| B[Plataforma Web]
+    B -->|Requisições HTTP / API| C[Sistema Administrativo Back-end]
+    C -->|Validação de Permissões| C
+    C -->|Leitura e Escrita em Tempo Real| D[(Banco Operacional - OLTP)]
+    D -->|Processo ETL / Carga Periódica| E[(Data Warehouse - OLAP)]
+    E -->|Consultas Analíticas| F[Sistema de BI & Relatórios]
+    F -->|Dashboards e Relatórios Operacionais| G[Direção GDP Projects & Gestores da Horta]
+```
+
+### C. Transacional (OLTP) vs. Analítico (OLAP)
+A separação funcional entre os bancos transacional e analítico atende às diferentes demandas operacionais e estratégicas da plataforma:
+
+| Critério | Banco Operacional (OLTP) | Data Warehouse (OLAP) |
+| :--- | :--- | :--- |
+| **Escopo Principal** | Operações rotineiras da plataforma em tempo real. | Análise histórica e consolidação centralizada de informações. |
+| **Responsabilidade no Sistema** | Processar cadastros, registrar presenças em mutirões, atualizar status de tarefas e aplicar permissões. | Armazenar histórico de safras, mensurar a evolução do uso dos espaços e apoiar o planejamento de novos cultivos. |
+| **Perfil das Operações** | Transações simultâneas rápidas de leitura e escrita com pequeno volume por operação. | Consultas analíticas pesadas, agregações de dados e relatórios consolidados. |
+| **Público-Alvo Direto** | Moradores, Líderes Locais, Visitantes e a API do sistema. | Direção Executiva e Gestores de Produtos/Projetos da GDP Projects e Líderes Comunitários. |
+
+---
+
 ## Matriz de Perfis e Permissões
 *   Gestor de Projetos / Administrador Geral (GDP Projects / Responsável pela Horta):
     * Escopo de Acesso: Controle total e centralizado.
@@ -178,3 +218,5 @@ Com essas necessidades, buscamos desenvolver o **Cultiva Plus** como uma platafo
 *   Visitante (Não autenticado):
     * Escopo de Acesso: Somente leitura pública.
     * Ações Permitidas: Visualização do mapa geral das hortas ativas, objetivos do projeto e página de cadastro/solicitação de entrada.
+
+

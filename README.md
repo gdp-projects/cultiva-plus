@@ -162,6 +162,46 @@ Para que o Cultiva Plus cumpra seu objetivo, identificamos como principais neces
 
 Com essas necessidades, buscamos desenvolver o **Cultiva Plus** como uma plataforma simples, acessível e colaborativa, capaz de melhorar a organização das hortas comunitárias e facilitar a participação de todos os envolvidos.
 
+## Arquitetura de Dados (Entrega 1)
+
+Atendendo às diretrizes da **Entrega 1 — Arquitetura de Dados**, esta seção apresenta a visão macro do sistema, o fluxo das informações e a divisão de responsabilidades entre os bancos transacional e analítico.
+
+### A. Mapeamento dos Sistemas (Componentes da Arquitetura)
+Para resolver a descentralização das informações e estruturar a gestão colaborativa, a arquitetura macro do **Cultiva Plus** é composta por:
+
+1. **Plataforma Web (Front-end):** Interface responsiva para moradores, líderes comunitários, gestores e visitantes.
+2. **Sistema Administrativo (Back-end / API):** Camada de serviços responsável pelas regras de negócio e controle da Matriz de Perfis e Permissões.
+3. **Banco de Dados Operacional (OLTP):** Banco relacional para armazenamento de dados dinâmicos em tempo real (cadastros, canteiros, presença em mutirões e tarefas).
+4. **Data Warehouse (OLAP):** Repositório analítico para consolidação do histórico de safras, uso de espaços e engajamento comunitário.
+5. **Sistema de BI & Relatórios:** Módulo para geração de dashboards e relatórios operacionais para a GDP Projects e líderes locais.
+6. **Infraestrutura e Nuvem:** Provedores de hospedagem web, manutenção e suporte para integração com APIs externas.
+
+### B. Desenho do Fluxo de Dados
+O fluxo a seguir mapeia a circulação da informação entre os componentes do sistema:
+
+```mermaid
+flowchart TD
+    A[Usuários: Visitantes / Moradores / Líderes Locais] -->|Acesso via Browser| B[Plataforma Web]
+    B -->|Requisições HTTP / API| C[Sistema Administrativo Back-end]
+    C -->|Validação de Permissões| C
+    C -->|Leitura e Escrita em Tempo Real| D[(Banco Operacional - OLTP)]
+    D -->|Processo ETL / Carga Periódica| E[(Data Warehouse - OLAP)]
+    E -->|Consultas Analíticas| F[Sistema de BI & Relatórios]
+    F -->|Dashboards e Relatórios Operacionais| G[Direção GDP Projects & Gestores da Horta]
+```
+
+### C. Transacional (OLTP) vs. Analítico (OLAP)
+A separação funcional entre os bancos transacional e analítico atende às diferentes demandas operacionais e estratégicas da plataforma:
+
+| Critério | Banco Operacional (OLTP) | Data Warehouse (OLAP) |
+| :--- | :--- | :--- |
+| **Escopo Principal** | Operações rotineiras da plataforma em tempo real. | Análise histórica e consolidação centralizada de informações. |
+| **Responsabilidade no Sistema** | Processar cadastros, registrar presenças em mutirões, atualizar status de tarefas e aplicar permissões. | Armazenar histórico de safras, mensurar a evolução do uso dos espaços e apoiar o planejamento de novos cultivos. |
+| **Perfil das Operações** | Transações simultâneas rápidas de leitura e escrita com pequeno volume por operação. | Consultas analíticas pesadas, agregações de dados e relatórios consolidados. |
+| **Público-Alvo Direto** | Moradores, Líderes Locais, Visitantes e a API do sistema. | Direção Executiva e Gestores de Produtos/Projetos da GDP Projects e Líderes Comunitários. |
+
+---
+
 ## Matriz de Perfis e Permissões
 *   Gestor de Projetos / Administrador Geral (GDP Projects / Responsável pela Horta):
     * Escopo de Acesso: Controle total e centralizado.
@@ -178,3 +218,60 @@ Com essas necessidades, buscamos desenvolver o **Cultiva Plus** como uma platafo
 *   Visitante (Não autenticado):
     * Escopo de Acesso: Somente leitura pública.
     * Ações Permitidas: Visualização do mapa geral das hortas ativas, objetivos do projeto e página de cadastro/solicitação de entrada.
+
+## Modelagem de Dados (Entrega 2)
+
+Atendendo à **Entrega 2 — Data Modeling**, criamos o modelo lógico de **cada sistema** levantado na Entrega 1, coerente com a arquitetura acima. A documentação completa está em [`docs/entrega-2-data-modeling/`](docs/entrega-2-data-modeling/README.md).
+
+| Sistema (Entrega 1) | Modelo lógico | Documento |
+|---|---|---|
+| Plataforma Web | Sessão, *view models* e formulários (não armazena dados permanentes) | [01-plataforma-web.md](docs/entrega-2-data-modeling/01-plataforma-web.md) |
+| Sistema Administrativo (API) | Recursos/DTOs, verificação de permissões e regras de negócio | [02-sistema-administrativo-api.md](docs/entrega-2-data-modeling/02-sistema-administrativo-api.md) |
+| Banco Operacional (OLTP) | Relacional normalizado (3FN) com 19 entidades | [03-banco-operacional-oltp.md](docs/entrega-2-data-modeling/03-banco-operacional-oltp.md) |
+| Data Warehouse (OLAP) | Esquema estrela: 5 fatos e 6 dimensões + ETL incremental | [04-data-warehouse-olap.md](docs/entrega-2-data-modeling/04-data-warehouse-olap.md) |
+| Sistema de BI & Relatórios | Camada semântica (views), KPIs e acesso por horta | [05-bi-relatorios.md](docs/entrega-2-data-modeling/05-bi-relatorios.md) |
+| Infraestrutura e Nuvem | Implantação, usuários de banco, controle de cargas, backup e retenção | [06-infraestrutura-nuvem.md](docs/entrega-2-data-modeling/06-infraestrutura-nuvem.md) |
+
+**Entidades principais:** Usuário, Comunidade, Horta, Membro da Horta, Solicitação de Entrada, Canteiro, Espécie, Cultivo, Colheita, Mutirão, Presença em Mutirão e Tarefa (mais 7 entidades de apoio: perfis, permissões, tipos de tarefa, dicas, avisos e auditoria).
+
+**Data Warehouse em uma frase:** todo dia às 02:00, o ETL lê do banco operacional (com um usuário somente leitura e sem dados pessoais) apenas o que mudou, monta o histórico de safras, ocupação dos canteiros e engajamento, e o BI usa esse histórico para os dashboards da GDP Projects e dos líderes das hortas.
+
+# Entrega 4 — Contribuição da Data Architecture e do Data Modeling
+
+## 1. Introdução
+
+A arquitetura e a modelagem de dados propostas para o Cultiva Plus contribuem diretamente para os objetivos da GDP Projects, permitindo desenvolver uma plataforma organizada, segura e eficiente para a gestão de hortas comunitárias.
+A integração entre os sistemas e uso adequado das informações facilitam o gerenciamento de hortas, canteiros, cultivos, atividades e participantes, promovendo a colaboração entre os membros da comunidade.
+
+## 2. Contribuição da Data Architecture
+
+A Data Architecture define como os sistemas do Cultiva Plus se comunicam e como as informações circulam entre eles.
+A utilização de uma plataforma web integrada a uma API e a um banco de dados operacional permite centralizar as informações, reduzir inconsistências e facilitar o acesso aos registros.
+Além disso, a arquitetura estabelece mecanismos de validação e controle de permissões, garantindo que cada participante tenha acesso apenas às funcionalidades e informações autorizadas.
+Essa organização contribui para a eficiência operacional, a segurança dos dados e a possibilidade de expansão da plataforma.
+
+## 3. Contribuição do Data Modeling
+
+O Data Modeling complementa a arquitetura ao definir como as informações serão organizadas e relacionadas dentro do banco de dados.
+No Cultiva Plus, entidades como usuários, hortas, canteiros, cultivos, tarefas e participações precisam possuir relacionamentos bem definidos para garantir a integridade das informações.
+Por exemplo, relacionar cada cultivo ao seu respectivo canteiro e cada tarefa à horta correspondente facilita o acompanhamento das atividades e evita registros inconsistentes.
+Uma modelagem adequada também reduz a duplicação desnecessária de dados, melhora a manutenção do sistema e facilita a implementação de novas funcionalidades.
+
+## 4. Apoio à tomada de decisões
+
+A arquitetura proposta também prevê a possibilidade de implementar futuramente um Data Warehouse e ferramentas de Business Intelligence (BI).
+Esses recursos poderão transformar registros operacionais em indicadores, permitindo analisar a evolução dos cultivos, a quantidade de atividades realizadas e a participação dos membros ao longo do tempo.
+Com essas informações, os responsáveis poderão identificar necessidades, planejar melhorias e acompanhar os resultados das iniciativas comunitárias.
+
+## 5. Alinhamento com os objetivos da GDP Projects
+
+A arquitetura e a modelagem propostas estão alinhadas aos valores da GDP Projects, especialmente à inovação adaptativa, acessibilidade digital, agilidade e entrega de valor.
+A centralização dos dados e a organização das funcionalidades contribuem para oferecer uma solução acessível às comunidades, enquanto a estrutura modular facilita futuras melhorias e adaptações.
+Dessa forma, o Cultiva Plus contribui para a missão da empresa de transformar necessidades operacionais em soluções digitais eficientes, além de apoiar sua visão de crescimento e reconhecimento no mercado.
+
+## 6. Conclusão
+
+A Data Architecture e o Data Modeling são fundamentais para que o Cultiva Plus alcance seus objetivos de negócio.
+
+
+

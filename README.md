@@ -236,6 +236,5 @@ Atendendo à **Entrega 2 — Data Modeling**, criamos o modelo lógico de **cada
 
 **Data Warehouse em uma frase:** todo dia às 02:00, o ETL lê do banco operacional (com um usuário somente leitura e sem dados pessoais) apenas o que mudou, monta o histórico de safras, ocupação dos canteiros e engajamento, e o BI usa esse histórico para os dashboards da GDP Projects e dos líderes das hortas.
 
-Os scripts em [`docs/entrega-2-data-modeling/sql/`](docs/entrega-2-data-modeling/sql/) criam os bancos no PostgreSQL 16 e foram testados de ponta a ponta com dados fictícios.
 
 

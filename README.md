@@ -219,4 +219,23 @@ A separação funcional entre os bancos transacional e analítico atende às dif
     * Escopo de Acesso: Somente leitura pública.
     * Ações Permitidas: Visualização do mapa geral das hortas ativas, objetivos do projeto e página de cadastro/solicitação de entrada.
 
+## Modelagem de Dados (Entrega 2)
+
+Atendendo à **Entrega 2 — Data Modeling**, criamos o modelo lógico de **cada sistema** levantado na Entrega 1, coerente com a arquitetura acima. A documentação completa está em [`docs/entrega-2-data-modeling/`](docs/entrega-2-data-modeling/README.md).
+
+| Sistema (Entrega 1) | Modelo lógico | Documento |
+|---|---|---|
+| Plataforma Web | Sessão, *view models* e formulários (não armazena dados permanentes) | [01-plataforma-web.md](docs/entrega-2-data-modeling/01-plataforma-web.md) |
+| Sistema Administrativo (API) | Recursos/DTOs, verificação de permissões e regras de negócio | [02-sistema-administrativo-api.md](docs/entrega-2-data-modeling/02-sistema-administrativo-api.md) |
+| Banco Operacional (OLTP) | Relacional normalizado (3FN) com 19 entidades | [03-banco-operacional-oltp.md](docs/entrega-2-data-modeling/03-banco-operacional-oltp.md) |
+| Data Warehouse (OLAP) | Esquema estrela: 5 fatos e 6 dimensões + ETL incremental | [04-data-warehouse-olap.md](docs/entrega-2-data-modeling/04-data-warehouse-olap.md) |
+| Sistema de BI & Relatórios | Camada semântica (views), KPIs e acesso por horta | [05-bi-relatorios.md](docs/entrega-2-data-modeling/05-bi-relatorios.md) |
+| Infraestrutura e Nuvem | Implantação, usuários de banco, controle de cargas, backup e retenção | [06-infraestrutura-nuvem.md](docs/entrega-2-data-modeling/06-infraestrutura-nuvem.md) |
+
+**Entidades principais:** Usuário, Comunidade, Horta, Membro da Horta, Solicitação de Entrada, Canteiro, Espécie, Cultivo, Colheita, Mutirão, Presença em Mutirão e Tarefa (mais 7 entidades de apoio: perfis, permissões, tipos de tarefa, dicas, avisos e auditoria).
+
+**Data Warehouse em uma frase:** todo dia às 02:00, o ETL lê do banco operacional (com um usuário somente leitura e sem dados pessoais) apenas o que mudou, monta o histórico de safras, ocupação dos canteiros e engajamento, e o BI usa esse histórico para os dashboards da GDP Projects e dos líderes das hortas.
+
+Os scripts em [`docs/entrega-2-data-modeling/sql/`](docs/entrega-2-data-modeling/sql/) criam os bancos no PostgreSQL 16 e foram testados de ponta a ponta com dados fictícios.
+
 

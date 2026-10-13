@@ -236,5 +236,42 @@ Atendendo à **Entrega 2 — Data Modeling**, criamos o modelo lógico de **cada
 
 **Data Warehouse em uma frase:** todo dia às 02:00, o ETL lê do banco operacional (com um usuário somente leitura e sem dados pessoais) apenas o que mudou, monta o histórico de safras, ocupação dos canteiros e engajamento, e o BI usa esse histórico para os dashboards da GDP Projects e dos líderes das hortas.
 
+# Entrega 4 — Contribuição da Data Architecture e do Data Modeling
+
+## 1. Introdução
+
+A arquitetura e a modelagem de dados propostas para o Cultiva Plus contribuem diretamente para os objetivos da GDP Projects, permitindo desenvolver uma plataforma organizada, segura e eficiente para a gestão de hortas comunitárias.
+A integração entre os sistemas e uso adequado das informações facilitam o gerenciamento de hortas, canteiros, cultivos, atividades e participantes, promovendo a colaboração entre os membros da comunidade.
+
+## 2. Contribuição da Data Architecture
+
+A Data Architecture define como os sistemas do Cultiva Plus se comunicam e como as informações circulam entre eles.
+A utilização de uma plataforma web integrada a uma API e a um banco de dados operacional permite centralizar as informações, reduzir inconsistências e facilitar o acesso aos registros.
+Além disso, a arquitetura estabelece mecanismos de validação e controle de permissões, garantindo que cada participante tenha acesso apenas às funcionalidades e informações autorizadas.
+Essa organização contribui para a eficiência operacional, a segurança dos dados e a possibilidade de expansão da plataforma.
+
+## 3. Contribuição do Data Modeling
+
+O Data Modeling complementa a arquitetura ao definir como as informações serão organizadas e relacionadas dentro do banco de dados.
+No Cultiva Plus, entidades como usuários, hortas, canteiros, cultivos, tarefas e participações precisam possuir relacionamentos bem definidos para garantir a integridade das informações.
+Por exemplo, relacionar cada cultivo ao seu respectivo canteiro e cada tarefa à horta correspondente facilita o acompanhamento das atividades e evita registros inconsistentes.
+Uma modelagem adequada também reduz a duplicação desnecessária de dados, melhora a manutenção do sistema e facilita a implementação de novas funcionalidades.
+
+## 4. Apoio à tomada de decisões
+
+A arquitetura proposta também prevê a possibilidade de implementar futuramente um Data Warehouse e ferramentas de Business Intelligence (BI).
+Esses recursos poderão transformar registros operacionais em indicadores, permitindo analisar a evolução dos cultivos, a quantidade de atividades realizadas e a participação dos membros ao longo do tempo.
+Com essas informações, os responsáveis poderão identificar necessidades, planejar melhorias e acompanhar os resultados das iniciativas comunitárias.
+
+## 5. Alinhamento com os objetivos da GDP Projects
+
+A arquitetura e a modelagem propostas estão alinhadas aos valores da GDP Projects, especialmente à inovação adaptativa, acessibilidade digital, agilidade e entrega de valor.
+A centralização dos dados e a organização das funcionalidades contribuem para oferecer uma solução acessível às comunidades, enquanto a estrutura modular facilita futuras melhorias e adaptações.
+Dessa forma, o Cultiva Plus contribui para a missão da empresa de transformar necessidades operacionais em soluções digitais eficientes, além de apoiar sua visão de crescimento e reconhecimento no mercado.
+
+## 6. Conclusão
+
+A Data Architecture e o Data Modeling são fundamentais para que o Cultiva Plus alcance seus objetivos de negócio.
+
 
 

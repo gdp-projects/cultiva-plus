@@ -273,5 +273,185 @@ Dessa forma, o Cultiva Plus contribui para a missão da empresa de transformar n
 
 A Data Architecture e o Data Modeling são fundamentais para que o Cultiva Plus alcance seus objetivos de negócio.
 
+Entrega 5 — Data Storage
 
+De forma resumida, o Cultiva Plus guarda seus dados em dois bancos principais: o banco operacional, que a plataforma usa o tempo todo, e o Data Warehouse, que guarda o histórico usado nos relatórios. Além deles, temos um espaço na nuvem para os backups, algumas informações temporárias no navegador e na API, e as fichas em papel que já descrevemos no modelo de gestão documental física.
+
+A. Armazenamento
+1. Banco operacional (cultiva_oltp)
+
+Qual tecnologia vamos usar? Vamos usar o PostgreSQL 16, contratado como serviço gerenciado em um provedor de nuvem (por exemplo Amazon RDS, Google Cloud SQL, Azure ou Supabase). "Gerenciado" significa que o provedor cuida da instalação, das atualizações e dos backups automáticos do servidor.
+
+Por que escolhemos essa tecnologia? Escolhemos o PostgreSQL por alguns motivos:
+
+Ele é gratuito e open source, o que combina com o nosso público: hortas comunitárias e iniciativas com pouco orçamento.
+É um banco relacional, ideal para dados que se ligam entre si, como horta → canteiro → cultivo → colheita.
+Garante que operações com várias etapas aconteçam por completo ou não aconteçam. Quando um líder aprova um novo membro, por exemplo, o sistema muda quatro tabelas ao mesmo tempo; se qualquer etapa falhar, nada é gravado pela metade.
+O próprio banco consegue recusar dados errados (como uma colheita com quantidade negativa), mesmo que a API tenha algum problema.
+Está disponível em praticamente todos os provedores de nuvem, então não ficamos presos a nenhum deles.
+
+Optamos pelo serviço gerenciado porque somos uma equipe pequena e não teríamos tempo para cuidar sozinhos da manutenção de um servidor de banco de dados.
+
+Quais dados serão armazenados? Todos os dados do dia a dia da plataforma: usuários, perfis e permissões, comunidades, hortas, canteiros, espécies de plantas, cultivos, colheitas, mutirões, presenças, tarefas, dicas, avisos, pedidos de entrada e o registro de auditoria (quem fez o quê e quando). É também o único lugar onde ficam dados pessoais, como nome, e-mail e telefone. A senha nunca é guardada como texto, apenas de forma criptografada.
+
+Como os dados serão organizados? Os dados ficam em 19 tabelas, divididas em quatro grupos: acesso e pessoas, espaços e cultivos, atividades, e conteúdo e controle. As tabelas seguem a modelagem normalizada da Entrega 2, ou seja, cada informação é guardada em um único lugar para evitar repetição. Toda tabela tem um código de identificação próprio, e as tabelas que podem ser alteradas guardam a data da última modificação, o que permite ao Data Warehouse saber o que mudou.
+
+Qual será o volume esperado? Fizemos uma estimativa considerando dois momentos: o primeiro ano, como projeto piloto, e o terceiro ano, com a plataforma já expandida.
+
+Para os cálculos, consideramos 15 canteiros por horta, 3 plantios por canteiro ao ano, 4 colheitas por plantio, 2 mutirões por mês em cada horta com cerca de 15 participantes, e 20 tarefas por mês por horta.
+
+É um volume pequeno para o PostgreSQL. O que mais cresce é o registro de auditoria, por isso ele tem regras próprias de limpeza e arquivamento.
+
+Como o sistema pode crescer? A ideia é crescer aos poucos, só quando houver necessidade:
+
+Se o servidor começar a ficar sobrecarregado, aumentamos a capacidade da máquina (mais memória e processamento). No serviço gerenciado isso é só uma mudança de configuração.
+Se muitas pessoas acessarem ao mesmo tempo, colocamos um gerenciador de conexões entre a API e o banco, para reaproveitar as conexões.
+Se as telas de consulta ficarem lentas, criamos uma cópia do banco só para leitura: as consultas vão para a cópia e as gravações continuam no banco principal.
+Se o registro de auditoria ficar muito grande, dividimos a tabela por ano e mandamos os anos antigos para um armazenamento mais barato.
+2. Data Warehouse (cultiva_dw)
+
+Qual tecnologia vamos usar? Também o PostgreSQL 16, mas em um banco separado. No começo ele pode ficar no mesmo servidor do banco operacional; quando o volume crescer, passa para um servidor próprio.
+
+Por que escolhemos essa tecnologia? Para o volume que esperamos, o PostgreSQL dá conta tranquilamente e não tem custo de licença. Usar a mesma tecnologia nos dois bancos também simplifica o trabalho da equipe: é uma só linguagem, uma só forma de fazer backup e o processo de carga (ETL) roda dentro do próprio banco, sem precisar de outra ferramenta. Mantemos o DW separado do banco operacional para que os relatórios pesados não deixem a plataforma lenta para quem está usando.
+
+Quais dados serão armazenados? Somente os dados úteis para análise e sem nenhuma informação pessoal: o histórico de colheitas, de plantios, da ocupação dos canteiros mês a mês, da participação nos mutirões e das tarefas. Os membros aparecem apenas como um número, sem nome, e-mail ou telefone.
+
+Como os dados serão organizados? O DW é dividido em quatro áreas:
+
+stg (área de preparação): recebe uma cópia temporária do que mudou no banco operacional.
+dw: o histórico organizado no modelo estrela da Entrega 2, com as tabelas de fatos (os números, como kg colhidos) e as dimensões (o contexto, como horta, espécie e data).
+bi: as visões prontas usadas pelos painéis de relatórios.
+etl: o controle das cargas (quando rodaram, se deram certo e até onde já foi carregado).
+
+Qual será o volume esperado? Menos de 50 MB no primeiro ano e menos de 500 MB acumulados até o terceiro ano. O DW é menor que o banco operacional porque não guarda textos, dados pessoais nem o registro de auditoria.
+
+Como o sistema pode crescer? O primeiro passo é levar o DW para um servidor próprio, o que exige mudar apenas o endereço de conexão no ETL. Depois, se os relatórios ficarem lentos, podemos dividir as tabelas maiores por ano e deixar os resultados dos painéis mais usados já calculados. Só se o projeto chegar a uma escala muito grande (dezenas de milhões de registros) faria sentido migrar para um banco especializado em análise, como BigQuery ou Redshift. Mesmo assim, o modelo continuaria o mesmo.
+
+3. Armazenamento na nuvem para backups
+
+Tecnologia e motivo: usaremos o serviço de armazenamento de arquivos do próprio provedor (por exemplo Amazon S3 ou Google Cloud Storage). Ele é barato, muito seguro contra perda de arquivos e permite guardar cópias em outra região do país. Também permite configurar que os arquivos não possam ser apagados antes do prazo, nem por engano nem por um invasor.
+
+Dados e organização: guardamos os backups dos dois bancos, os registros de auditoria antigos e as fichas em papel digitalizadas, em pastas separadas por tipo e por data. Os arquivos são criptografados.
+
+Volume e crescimento: menos de 2 GB no primeiro ano e entre 15 e 25 GB no terceiro, somando todas as cópias guardadas. Esse tipo de armazenamento cresce automaticamente, sem limite, e as regras de retenção apagam o que já passou do prazo.
+
+4. Navegador e API (dados temporários)
+
+Algumas informações ficam guardadas só por pouco tempo:
+
+No navegador: o cookie de sessão, que mantém o usuário conectado, e algumas preferências de tela, como a horta selecionada e os filtros. Nunca guardamos dados pessoais no navegador.
+Na API: uma cópia em memória da tabela de permissões, para não precisar consultar o banco a cada clique. Ela é renovada a cada 5 minutos.
+
+Esses dados não crescem com o tempo e podem ser perdidos sem prejuízo.
+
+5. Arquivo físico
+
+Como descrevemos no Modelo de Gestão Documental e Física, cada horta mantém fichas em papel dos canteiros e dos mutirões, guardadas em armário de aço e organizadas pelo código da horta e do canteiro. Isso garante que membros sem acesso constante à internet também consigam participar. Ao fim de cada mês, o líder da horta lança essas informações na plataforma e a ficha é digitalizada.
+
+B. Persistência
+
+Quais dados precisam ser persistidos? Tudo o que faz parte do funcionamento e da história das hortas precisa ficar guardado de forma permanente: cadastros de usuários e suas permissões, hortas, canteiros, espécies, plantios, colheitas, mutirões, presenças, tarefas, pedidos de entrada, dicas, avisos e o registro de auditoria. No Data Warehouse, também precisam ser guardados o histórico analítico e o controle das cargas. Sem esse controle, o ETL não saberia o que já foi carregado.
+
+Quais dados podem ser temporários?
+
+A sessão do usuário, que dura até ele sair ou até expirar;
+As preferências de tela no navegador;
+Os dados exibidos nas telas e os formulários ainda não enviados;
+A cópia da tabela de permissões guardada na API;
+A área de preparação do Data Warehouse, que é apagada a cada carga;
+Os registros técnicos de erro da aplicação, guardados por 30 dias.
+
+Se qualquer um deles for perdido, basta recarregar a página ou fazer login novamente.
+
+Como os dados serão inseridos, atualizados e excluídos? Toda gravação passa pela API. A plataforma web nunca acessa o banco diretamente, e a ferramenta de relatórios apenas lê dados.
+
+Inserção: a API confere se o usuário tem permissão e se os dados fazem sentido (por exemplo, se ainda há vagas no mutirão) e só então grava.
+Atualização: a API altera o registro e o banco anota automaticamente a data da mudança. Assim, o Data Warehouse recebe a atualização na carga da madrugada. Ações importantes, como aprovar um membro ou mudar um perfil, também ficam registradas na auditoria, com o valor antigo e o novo.
+Exclusão: na maioria dos casos, não apagamos os registros, apenas mudamos o status deles (por exemplo, um canteiro passa a "inativo" ou uma tarefa a "cancelada"). Assim o histórico das safras e da participação continua completo. A exclusão definitiva só acontece em casos de cadastro feito por engano e sem outros dados ligados a ele, feita pelo administrador e registrada na auditoria.
+Pedido de exclusão de dados pessoais (LGPD): quando um membro sai e pede a remoção dos seus dados, trocamos o nome, o e-mail e o telefone por valores genéricos e apagamos a senha. O histórico de plantios e presenças continua existindo, mas sem identificar a pessoa.
+Registro de auditoria: só aceita novos registros. Ninguém, nem a API, consegue alterá-los ou apagá-los.
+
+Como garantir a integridade dos dados? Criamos três camadas de proteção, para que, se uma falhar, a próxima segure:
+
+Na plataforma web: os formulários verificam campos obrigatórios, formatos e datas antes do envio.
+Na API: o sistema confere as permissões e aplica as regras de negócio, por exemplo que a soma das áreas plantadas não pode passar do tamanho do canteiro. Cada operação acontece por inteiro ou é desfeita.
+No banco de dados: regras gravadas no próprio banco impedem dados inválidos, como uma colheita sem plantio, uma quantidade negativa, um status inexistente ou uma data de término anterior à de início.
+
+Além disso, cada parte do sistema acessa o banco com um usuário que tem apenas as permissões necessárias. O processo de carga do DW, por exemplo, só consegue ler dados e não enxerga informações pessoais.
+
+Como evitar perda ou duplicidade de informações?
+
+Para evitar duplicidade:
+
+O banco não aceita dois usuários com o mesmo e-mail, dois canteiros com o mesmo código na mesma horta, nem a mesma pessoa confirmada duas vezes no mesmo mutirão.
+As espécies de plantas e os tipos de tarefa vêm de uma lista padronizada, para evitar que "Rega", "rega" e "Regar" virem três coisas diferentes.
+Se a internet estiver lenta e o usuário clicar duas vezes em "Salvar", o botão é desativado depois do primeiro clique e a API reconhece e ignora o envio repetido.
+A carga do DW pode rodar quantas vezes for preciso sem duplicar nada, porque ela atualiza o registro que já existe em vez de criar outro.
+Ao lançar dados de uma ficha em papel, o líder informa o código da ficha, e o sistema avisa se ela já foi lançada.
+
+Para evitar perda:
+
+Se uma operação falhar no meio, nada fica gravado pela metade.
+Se a carga do DW falhar, ela é desfeita por completo e tentada de novo na próxima execução.
+Como não apagamos registros de negócio, um erro pode ser corrigido simplesmente voltando o status.
+Os backups, explicados a seguir, protegem contra falhas mais graves.
+Se a plataforma ficar fora do ar durante um mutirão, a presença é registrada na ficha em papel e lançada depois.
+C. Backup e Recuperação
+
+Como os backups serão feitos? Usamos dois tipos de backup que se completam:
+
+Automático do provedor: o serviço gerenciado tira uma "foto" completa do banco todos os dias e grava continuamente cada alteração feita. Com isso, conseguimos voltar o banco para qualquer minuto dos últimos dias.
+Cópia exportada: uma vez por semana, exportamos o banco inteiro para um arquivo compactado e criptografado, que fica guardado fora do serviço do banco e em outra região.
+
+Como os dados seriam recuperados em caso de falha?
+
+Se o servidor do banco cair: o provedor mantém um servidor reserva, que assume automaticamente. Os usuários praticamente não percebem.
+Se alguém apagar ou alterar algo por engano: usamos o registro de auditoria para descobrir quando aconteceu e restauramos uma cópia do banco do minuto anterior ao erro em um servidor separado. De lá, copiamos apenas os dados afetados de volta para o banco principal, sem tirar a plataforma do ar.
+Se o banco for corrompido ou sofrer um ataque: restauramos o último backup em bom estado em um novo servidor, trocamos todas as senhas de acesso e apontamos a plataforma para ele.
+Se a região inteira do provedor ficar fora do ar: restauramos a cópia semanal guardada na outra região e lançamos as fichas em papel preenchidas nesse período.
+Se a carga do Data Warehouse falhar: não há nada a recuperar. A carga é desfeita sozinha, os painéis continuam mostrando os dados do dia anterior e a equipe de infraestrutura recebe um alerta.
+Se o Data Warehouse for perdido: restauramos a cópia semanal ou simplesmente refazemos todo o histórico a partir do banco operacional.
+Se uma ficha em papel for danificada: usamos a versão digitalizada ou os dados já lançados na plataforma.
+
+A cada três meses fazemos um teste de restauração: recuperamos o último backup em um ambiente de testes e conferimos se os dados estão completos. Backup que nunca foi testado não dá garantia nenhuma.
+
+D. Transacional vs Analítico
+
+Quais dados permanecem no banco operacional? Todos os dados continuam no banco operacional, que é a fonte oficial de informação. O Data Warehouse recebe apenas uma cópia tratada de parte deles. Alguns dados, porém, ficam somente no banco operacional e nunca vão para o DW:
+
+Os dados pessoais dos usuários (nome, e-mail, telefone e senha), por privacidade;
+O endereço e a localização exata das hortas, que só servem para o mapa;
+Perfis e permissões, que são regras de funcionamento e não informação para análise;
+Vínculos com as hortas e pedidos de entrada (podem ir para o DW em uma versão futura);
+Dicas, avisos e os títulos e descrições de tarefas e mutirões, por serem textos livres;
+O registro de auditoria, que é um controle de segurança.
+
+Quais dados são enviados para o ambiente analítico? O DW recebe os dados que ajudam a entender a evolução das hortas ao longo do tempo:
+
+Colheitas: quanto foi colhido, de qual espécie, em qual canteiro e para onde foi (consumo, doação, troca);
+Plantios: quanto tempo levaram, se foram perdidos e quanto produziram;
+Ocupação dos canteiros: quanto da área estava em uso em cada mês;
+Mutirões: quem confirmou, quem compareceu e quantas horas foram dedicadas;
+Tarefas: se foram concluídas e se foram cumpridas no prazo;
+As informações de contexto (horta, comunidade, canteiro, espécie, tipo de tarefa) e os membros identificados apenas por número.
+
+Esse envio acontece todo dia às 02:00, quando quase ninguém está usando a plataforma, e leva apenas o que mudou desde a última carga.
+
+Como o armazenamento atende às necessidades transacionais? No dia a dia, a plataforma precisa registrar muitas ações pequenas ao mesmo tempo, como confirmar presença, concluir tarefa ou lançar colheita, e mostrar a informação atualizada na hora. O banco operacional atende a isso porque:
+
+Seus dados são organizados sem repetição, então cada ação altera poucas informações e acontece rápido;
+Operações com várias etapas acontecem por completo ou não acontecem, mantendo tudo coerente (por exemplo, o número de vagas de um mutirão);
+Ele grava cada alteração continuamente e tem um servidor reserva, então nenhuma ação dos usuários se perde;
+Os relatórios pesados ficam em outro banco e não deixam a plataforma lenta;
+Os dados pessoais ficam protegidos em um único lugar, acessível apenas pela API.
+
+Como o armazenamento atende às necessidades analíticas? Para a GDP Projects e os líderes das hortas, o importante é olhar o histórico e responder perguntas como "qual espécie rende mais?", "a participação nos mutirões está aumentando?" ou "quanto da produção foi doada?". O Data Warehouse atende a isso porque:
+
+Fica em um banco separado e pode fazer consultas pesadas sem atrapalhar os usuários;
+Já guarda os dados organizados para relatório, então as consultas são simples e rápidas;
+Permite cruzar produção, ocupação e participação de uma mesma horta no mesmo mês;
+Preserva o histórico correto mesmo quando uma horta muda de status ou de tamanho;
+Guarda a estação do ano de cada data, o que ajuda no planejamento dos plantios;
+Entrega os indicadores já calculados para os painéis, então todos veem os mesmos números;
+Protege a privacidade: não tem dados pessoais, e cada líder vê apenas as hortas que coordena.
 

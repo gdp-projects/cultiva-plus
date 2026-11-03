@@ -554,3 +554,45 @@ Os principais riscos identificados e suas respectivas estratégias de proteção
 **Medidas implementadas:** até o momento, nenhuma dessas medidas foi confirmada como implementada, pois ainda fazem parte das definições técnicas do projeto.
 
 A implementação será realizada durante as etapas de desenvolvimento e implantação da plataforma, conforme a infraestrutura e as tecnologias escolhidas.
+### 2.1. Diagrama da Arquitetura
+### B. Desenho do Fluxo de Dados
+
+O diagrama abaixo apresenta a arquitetura de armazenamento e integração de dados do Cultiva Plus, demonstrando o fluxo de informações entre os usuários, a aplicação, o banco operacional, os processos ETL/ELT, o Data Warehouse e os serviços de armazenamento em nuvem.
+
+```mermaid
+flowchart LR
+    A(("Usuários<br/>Moradores, visitantes e líderes locais<br/>Plataforma Web"))
+
+    B["Navegador e API<br/>Memória / Cookies<br/>Sessão, preferências e cache de permissões"]
+
+    C["Minha Aplicação<br/>Back-end / API<br/>Regras de negócio, permissões e controle de acesso"]
+
+    D[("Banco Operacional OLTP<br/>PostgreSQL 16 gerenciado<br/>19 tabelas normalizadas<br/>Cadastros, canteiros, colheitas e mutirões")]
+
+    E["Processo ETL / ELT<br/>Carga diária às 02:00<br/>Anonimização de dados pessoais LGPD"]
+
+    F[("Data Warehouse OLAP<br/>PostgreSQL 16 separado<br/>Modelo estrela: fatos e dimensões<br/>Safras, ocupação e engajamento")]
+
+    G(("BI e Relatórios<br/>Integração<br/>Painéis para Diretoria GDP Projects<br/>e líderes comunitários"))
+
+    H[("Armazenamento em Nuvem<br/>Object Storage<br/>S3 / Cloud Storage<br/>Backups criptografados,<br/>auditoria antiga e fichas digitalizadas")]
+
+    A -->|Acessa| B
+    B -->|Requisições| C
+    C -->|Transações em tempo real| D
+    D -->|Extração periódica| E
+    E -->|Carga anônima| F
+    F -->|Consultas analíticas| G
+
+    D -.->|Backups e auditoria| H
+    C -.->|Fichas digitalizadas| H
+
+    style A fill:#B5E853,stroke:#75A82D,color:#34451C
+    style B fill:#E0E0DA,stroke:#999990,color:#444444
+    style C fill:#FFE66D,stroke:#C5A52A,color:#554600
+    style D fill:#9DE5F5,stroke:#329FC1,color:#164B5B
+    style E fill:#FFB36B,stroke:#D97925,color:#65380D
+    style F fill:#9DE5F5,stroke:#329FC1,color:#164B5B
+    style G fill:#B5E853,stroke:#75A82D,color:#34451C
+    style H fill:#D8D8D0,stroke:#929287,color:#444444
+```

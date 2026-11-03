@@ -455,3 +455,102 @@ Guarda a estação do ano de cada data, o que ajuda no planejamento dos plantios
 Entrega os indicadores já calculados para os painéis, então todos veem os mesmos números;
 Protege a privacidade: não tem dados pessoais, e cada líder vê apenas as hortas que coordena.
 
+# Entrega 6 — Data Security
+
+Esta etapa apresenta as medidas de segurança propostas para proteger os dados do Cultiva Plus contra acessos não autorizados, alterações indevidas, perdas e exposições.
+
+## A. Identificação dos Dados
+
+Os dados do Cultiva Plus serão classificados conforme seu nível de acesso:
+
+- **Públicos:** informações das hortas, localização divulgada e dicas de cultivo.
+- **Internos:** tarefas, atividades e relatórios operacionais.
+- **Confidenciais:** dados cadastrais, contatos dos participantes e solicitações de entrada.
+- **Sensíveis:** atualmente, o projeto não prevê a coleta de dados pessoais sensíveis.
+
+## B. Controle de Acesso
+
+O acesso será definido conforme os perfis e permissões estabelecidos na arquitetura do sistema.
+
+- **Administrador Geral:** acesso completo, gerenciamento de hortas, membros e permissões.
+- **Responsável pela Horta:** gerenciamento dos cultivos, canteiros e atividades de sua horta.
+- **Membro Participante:** consulta às hortas, registro de tarefas e presença em mutirões.
+- **Visitante:** visualização de informações públicas e solicitação de entrada.
+- **Sistemas internos:** acesso limitado às operações necessárias para API, ETL e BI.
+
+A API verificará as permissões antes de executar cada operação, aplicando o princípio do menor privilégio para impedir acessos indevidos.
+
+## C. Autenticação e Autorização
+
+A autenticação será realizada por meio de cadastro e login com e-mail e senha. As senhas serão armazenadas utilizando algoritmos de hash, como Argon2id ou bcrypt.
+
+A autorização será controlada pela API, utilizando os perfis e permissões definidos para cada usuário.
+
+Tentativas de acesso não autorizado serão bloqueadas e registradas nos logs de segurança. Também serão utilizados mecanismos para limitar tentativas excessivas de login.
+
+## D. Proteção dos Dados
+
+A proteção das informações será realizada por meio das seguintes medidas:
+
+- **Transmissão:** utilização de HTTPS/TLS para proteger a comunicação entre usuários e servidor.
+- **Armazenamento:** hash de senhas, criptografia de informações confidenciais e controle de acesso ao banco de dados.
+- **Processamento:** validação de dados, consultas parametrizadas e verificação de permissões pela API.
+- **Credenciais:** utilização de variáveis de ambiente e gerenciamento de secrets para evitar exposição de senhas e chaves no código-fonte.
+- **Data Warehouse:** acesso somente para leitura pelo processo ETL, sem utilização desnecessária de dados pessoais.
+- **Backup:** realização de cópias de segurança para permitir a recuperação das informações.
+
+## E. Auditoria
+
+O sistema deverá registrar operações importantes para permitir o acompanhamento das atividades e a identificação de possíveis irregularidades.
+
+Entre os principais registros estão:
+
+- Login e logout dos usuários;
+- Tentativas de acesso não autorizado;
+- Alterações e exclusões de dados;
+- Cadastro de participantes;
+- Alterações nas permissões;
+- Modificações em hortas e canteiros;
+- Operações administrativas.
+
+Os registros de auditoria terão acesso restrito para evitar alterações ou exclusões indevidas.
+
+## F. Riscos de Segurança
+
+Os principais riscos identificados e suas respectivas estratégias de proteção são:
+
+**1. Vazamento de senhas**
+- Impacto: Alto.
+- Proteção: utilização de hash seguro.
+
+**2. Acesso indevido**
+- Impacto: Alto.
+- Proteção: controle de autenticação e autorização.
+
+**3. Interceptação de dados**
+- Impacto: Alto.
+- Proteção: utilização de HTTPS/TLS.
+
+**4. Exclusão acidental**
+- Impacto: Médio/Alto.
+- Proteção: realização de backups periódicos.
+
+**5. Exposição de credenciais**
+- Impacto: Alto.
+- Proteção: utilização de variáveis de ambiente e secrets.
+
+**6. Ataques de SQL Injection**
+- Impacto: Alto.
+- Proteção: utilização de consultas parametrizadas.
+
+**7. Alteração indevida de registros**
+- Impacto: Alto.
+- Proteção: controle de permissões e auditoria.
+
+## Diferenciação entre Medidas Planejadas e Implementadas
+
+**Medidas planejadas:** incluem autenticação por e-mail e senha, hash de senhas com Argon2id ou bcrypt, HTTPS/TLS, criptografia de dados confidenciais, controle de permissões pela API, gerenciamento de secrets, auditoria e backups periódicos.
+
+**Medidas implementadas:** até o momento, nenhuma dessas medidas foi confirmada como implementada, pois ainda fazem parte das definições técnicas do projeto.
+
+A implementação será realizada durante as etapas de desenvolvimento e implantação da plataforma, conforme a infraestrutura e as tecnologias escolhidas.

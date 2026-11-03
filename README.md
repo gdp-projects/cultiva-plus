@@ -554,3 +554,154 @@ Os principais riscos identificados e suas respectivas estratégias de proteção
 **Medidas implementadas:** até o momento, nenhuma dessas medidas foi confirmada como implementada, pois ainda fazem parte das definições técnicas do projeto.
 
 A implementação será realizada durante as etapas de desenvolvimento e implantação da plataforma, conforme a infraestrutura e as tecnologias escolhidas.
+
+# Entrega 8 Integração das Entregas
+#
+
+## 1. Apresentação do Projeto
+
+O **Cultiva Plus** é uma plataforma colaborativa desenvolvida pela **GDP Projects**, com o objetivo de otimizar o gerenciamento de hortas comunitárias, conectando moradores, visitantes, líderes locais e gestores.
+
+A solução permite organizar atividades relacionadas ao cultivo, gerenciamento de canteiros, colheitas e realização de mutirões comunitários.
+
+Sua arquitetura foi projetada para separar as operações transacionais em tempo real do processamento analítico, garantindo maior organização, escalabilidade, segurança e conformidade com a Lei Geral de Proteção de Dados (LGPD).
+
+---
+
+## 2. Arquitetura de Armazenamento e Fluxo de Dados
+
+A arquitetura do Cultiva Plus utiliza diferentes componentes para gerenciar, armazenar, processar e analisar os dados da plataforma.
+
+### 2.1. Diagrama da Arquitetura
+
+O diagrama abaixo representa o fluxo de informações entre os usuários, a aplicação, os bancos de dados operacionais e analíticos e os serviços de armazenamento em nuvem.
+
+
+
+### 2.2. Descrição do Fluxo de Dados
+
+O funcionamento da arquitetura está dividido nas seguintes etapas:
+
+**1. Usuários**
+
+Moradores, visitantes e líderes locais acessam a plataforma web para utilizar as funcionalidades do Cultiva Plus.
+
+**2. Navegador e API — Memória e Cookies**
+
+Responsável pelo gerenciamento de informações temporárias, incluindo:
+
+- Sessões de usuários.
+- Preferências de navegação.
+- Cookies.
+- Cache de informações e permissões.
+
+**3. Aplicação — Back-end / API**
+
+Camada responsável pelo processamento das requisições e aplicação das regras de negócio, incluindo:
+
+- Validação de dados.
+- Gerenciamento de permissões.
+- Controle de acesso.
+- Comunicação com o banco de dados.
+- Processamento das operações da plataforma.
+
+**4. Banco de Dados Operacional — OLTP**
+
+Utiliza PostgreSQL 16 em ambiente de nuvem gerenciada.
+
+É responsável pelo armazenamento das informações utilizadas nas operações em tempo real, contemplando 19 tabelas normalizadas, relacionadas a:
+
+- Cadastros.
+- Canteiros.
+- Colheitas.
+- Mutirões.
+- Usuários.
+- Registros operacionais.
+
+**5. Processo ETL / ELT**
+
+Executa periodicamente a extração, transformação e carga dos dados operacionais.
+
+A execução está programada para ocorrer diariamente às 02:00, realizando a preparação dos dados para o ambiente analítico.
+
+Durante o processamento, são aplicadas medidas de anonimização dos dados pessoais, visando reduzir a exposição de informações identificáveis e atender aos princípios da LGPD.
+
+**6. Data Warehouse — OLAP**
+
+Utiliza uma instância PostgreSQL 16 separada do banco operacional.
+
+Sua estrutura segue o modelo dimensional estrela, composto por tabelas de fatos e dimensões.
+
+É responsável por consolidar informações históricas relacionadas a:
+
+- Safras.
+- Ocupação dos espaços.
+- Colheitas.
+- Engajamento comunitário.
+- Indicadores de desempenho.
+
+**7. Armazenamento em Nuvem — Object Storage**
+
+Responsável pelo armazenamento de arquivos e informações de apoio, incluindo:
+
+- Backups criptografados.
+- Registros históricos de auditoria.
+- Fichas digitalizadas.
+- Documentos utilizados pela plataforma.
+
+Como exemplos de tecnologias, podem ser utilizados Amazon S3 ou serviços equivalentes de Cloud Storage.
+
+**8. BI e Relatórios — Integração**
+
+Camada responsável pela disponibilização de informações analíticas e indicadores por meio de painéis gerenciais.
+
+Os dados são utilizados para apoiar a tomada de decisões estratégicas da diretoria da GDP Projects e dos líderes comunitários.
+
+---
+
+## 3. Resumo dos Componentes de Armazenamento
+
+| Componente               | Tecnologia                           | Finalidade                                                          |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
+| Banco Operacional (OLTP) | PostgreSQL 16 (Gerenciado)           | Armazenamento transacional das 19 tabelas normalizadas.             |
+| Data Warehouse (OLAP)    | PostgreSQL 16 (Instância separada)   | Armazenamento histórico e processamento de consultas analíticas.    |
+| Armazenamento em Nuvem   | Object Storage (S3 / Cloud Storage)  | Backups criptografados, auditoria histórica e fichas digitalizadas. |
+| Navegador e API          | Memória / Cookies                    | Gerenciamento de sessões, preferências e informações temporárias.   |
+| ETL / ELT                | Processo automatizado                | Extração, transformação, anonimização e carga dos dados.            |
+| BI e Relatórios          | Ferramentas de Business Intelligence | Geração de indicadores e painéis gerenciais.                        |
+
+---
+
+## 4. Segurança e Conformidade com a LGPD
+
+A arquitetura do Cultiva Plus considera a segurança e a privacidade das informações como aspectos fundamentais.
+
+Entre as medidas previstas estão:
+
+- **Anonimização de dados:** tratamento dos dados pessoais antes de sua utilização no ambiente analítico.
+- **Controle de acesso:** validação de permissões por meio do back-end da aplicação.
+- **Criptografia:** proteção dos backups armazenados em nuvem.
+- **Auditoria:** manutenção de registros para rastreabilidade das operações.
+- **Separação de ambientes:** utilização de bancos distintos para operações transacionais e análises históricas.
+- **Proteção de sessões:** gerenciamento seguro das informações temporárias dos usuários.
+
+Essas medidas contribuem para a proteção das informações e para o atendimento aos princípios estabelecidos pela Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+
+---
+
+## 5. Considerações Finais
+
+A arquitetura proposta para o Cultiva Plus proporciona uma estrutura organizada para o gerenciamento das informações da plataforma.
+
+A separação entre o banco operacional (OLTP) e o ambiente analítico (OLAP) permite manter o desempenho das operações cotidianas sem comprometer a geração de relatórios e indicadores.
+
+Além disso, a utilização de armazenamento em nuvem, processos automatizados de ETL/ELT e mecanismos de segurança contribui para a escalabilidade, confiabilidade e governança dos dados.
+
+Dessa forma, o Cultiva Plus estabelece uma base tecnológica para apoiar a gestão eficiente das hortas comunitárias e o acompanhamento das atividades realizadas pelos participantes do projeto.
+
+---
+
+**Projeto:** Cultiva Plus
+**Organização:** GDP Projects
+**Documentação:** Arquitetura de Armazenamento e Fluxo de Dados
+**Banco de Dados:** PostgreSQL 16

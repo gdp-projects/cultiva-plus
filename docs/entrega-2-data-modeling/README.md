@@ -103,6 +103,7 @@ docs/entrega-2-data-modeling/
 ├── 04-data-warehouse-olap.md          # Sistema 4 (+ ETL: quais dados, como saem, finalidade)
 ├── 05-bi-relatorios.md                # Sistema 5
 ├── 06-infraestrutura-nuvem.md         # Sistema 6
+├── 07-data-integration.md             # Entrega 7 — Data Integration (integração entre os sistemas)
 └── sql/
     ├── 01_oltp_schema.sql             # modelo físico do OLTP
     ├── 02_oltp_dados_exemplo.sql      # dados fictícios para teste

@@ -2,15 +2,9 @@
 
 ## Descrição do Projeto
 
-O **Cultiva Plus** é uma plataforma voltada para o gerenciamento de hortas comunitárias, promovendo uma rede de cultivo colaborativo entre moradores, comunidades e responsáveis pelas hortas. A solução busca facilitar a organização dos espaços, o acompanhamento dos cultivos e a participação dos membros, tornando o processo mais simples, acessível e colaborativo.
+O **Cultiva Plus** é uma plataforma prática para o gerenciamento de hortas comunitárias, conectando moradores, voluntários e responsáveis locais para planejar canteiros, acompanhar safras e organizar mutirões de forma colaborativa.
 
-Por meio da tecnologia, o Cultiva Plus conecta pessoas interessadas em cultivar, compartilhar conhecimentos e contribuir para o desenvolvimento de hortas comunitárias, incentivando a sustentabilidade, o aproveitamento de espaços e o fortalecimento da comunidade.
-
-## Objetivo da Solução
-
-O objetivo do **Cultiva Plus** é facilitar o gerenciamento de hortas comunitárias por meio de uma plataforma colaborativa que centraliza informações, organiza atividades e conecta os participantes. A solução busca tornar a gestão dos cultivos mais eficiente, incentivar a participação da comunidade e promover práticas sustentáveis de cultivo e compartilhamento.
-
-## Integrantes da Equipe
+## Integrantes da Equipe — GDP Projects
 
 * Daniel Alonso Oliveira Soares
 * João Pablo Silva Pinheiro
@@ -22,79 +16,24 @@ O objetivo do **Cultiva Plus** é facilitar o gerenciamento de hortas comunitár
 
 ---
 
-# Empresa: GDP Projects
+## O Que o Sistema Faz?
 
-## Segmento de Atuação
-Desenvolvimento de software, inteligência artificial e soluções digitais sob medida. Criação de chatbots, landing pages, plataformas web e sistemas de gestão para pequenas empresas e iniciativas comunitárias.
-
-## Missão
-Impulsionar pequenos negócios e iniciativas locais com soluções digitais acessíveis, inteligentes e eficientes. Transformação de necessidades operacionais em tecnologia prática.
-
-## Visão
-Reconhecimento como consultoria de desenvolvimento ágil e inovadora, referência na criação de soluções digitais para micro e pequenas empresas até 2028.
-
-## Valores
-* Inovação adaptativa
-* Acessibilidade digital
-* Foco no cliente e no impacto do negócio
-* Agilidade e entrega de valor
-
-## Organograma
-* **Direção Executiva:** Daniel Alonso Oliveira Soares
-* **Gestão de Produtos e Projetos:** João Pablo Silva Pinheiro
-* **Desenvolvimento Back-end e IA:** Erick Sales Ramos e Antonio Gabriel Gomes Falcão do Nascimento
-* **Desenvolvimento Front-end e UX/UI:** Rafael Jesus Bezerra Cerqueira
-* **Infraestrutura e DevOps:** Alexandre Roque Pereira Costa
-* **Marketing e Atendimento ao Cliente:** Breno Kayan Souza de Azevedo
+* **Cadastra hortas e canteiros:** Organiza os espaços físicos disponíveis em cada comunidade.
+* **Controla cultivos e safras:** Registra o que foi plantado, quando e quanto foi colhido (com destino para consumo ou doação).
+* **Organiza mutirões e tarefas:** Gerencia a presença dos voluntários e as atividades rotineiras (rega, adubação, capina).
+* **Gera relatórios de produção:** Consolida indicadores simples para prestação de contas comunitária e acompanhamento dos resultados.
 
 ---
 
-# Análise de Dados e Necessidades do Sistema
+## Documentação Técnica (`docs/`)
 
-## Quais dados o sistema produz e utiliza?
-* Informações das hortas e dos espaços disponíveis;
-* Informações sobre os cultivos e colheitas;
-* Dados dos participantes e membros voluntários;
-* Informações sobre as atividades e mutirões realizados;
-* Dados de acompanhamento e organização dos canteiros.
+Toda a documentação do projeto está organizada em módulos diretos na pasta `docs/`:
 
-## Quem utiliza esses dados?
-* Moradores e membros das comunidades;
-* Responsáveis e líderes locais pelas hortas;
-* Gestores de projetos comunitários e equipe executiva da GDP Projects.
-
-## Onde os dados são armazenados?
-Os dados operacionais ficam centralizados em banco relacional PostgreSQL (`cultiva_oltp`), o histórico gerencial é consolidado em um Data Warehouse analítico (`cultiva_dw`), os backups e fichas digitalizadas residem em Object Storage em nuvem, e cópias físicas de segurança são arquivadas nas sedes locais.
-
-## Dados sensíveis e privacidade
-O Cultiva Plus não coleta dados pessoais sensíveis. Dados cadastrais comuns (e-mail, telefone) são protegidos com hash irreversível para senhas e mascarados nos ambientes analíticos, em total conformidade com os princípios da LGPD.
-
----
-
-# Documentação de Dados (`docs/`)
-
-Toda a documentação técnica e de engenharia de dados está organizada na pasta [`docs/`](docs/), dividida por disciplina:
-
-| Módulo | Descrição | Link |
+| Módulo | O que contém? | Link |
 | :--- | :--- | :--- |
-| **Data Architecture** | Visão macro dos 6 sistemas, fluxo de dados, separação OLTP vs. OLAP e matriz de permissões. | [docs/data-architecture/](docs/data-architecture/README.md) |
-| **Data Modeling** | Modelagem lógica dos sistemas, modelo relacional 3FN, esquema estrela analítico (DW), DDLs SQL e gestão documental física. | [docs/data-modeling/](docs/data-modeling/README.md) |
-| **Data Storage** | Tecnologias de armazenamento, persistência, regras de negócio, volume, escala e planos de backup/recuperação. | [docs/data-storage/](docs/data-storage/README.md) |
-| **Data Security** | Classificação de dados, autenticação/autorização, princípio do menor privilégio, proteção em repouso/trânsito e auditoria. | [docs/data-security/](docs/data-security/README.md) |
-| **Data Integration** | Integrações entre Web, API, OLTP, DW e BI: formatos, REST API, ETL via `postgres_fdw`, resiliência, tolerância a falhas e consistência. | [docs/data-integration/](docs/data-integration/README.md) |
-| **Apresentação da Equipe** | Guia completo de preparação para a banca: divisão de papéis por integrante, roteiro do pitch e respostas para perguntas difíceis. | [docs/guia-apresentacao-equipe.md](docs/guia-apresentacao-equipe.md) |
-
----
-
-## Estrutura de Pastas
-
-```text
-cultiva-plus/
-├── README.md                          # Visão geral do projeto e índice de docs
-└── docs/
-    ├── data-architecture/             # Arquitetura dos sistemas e fluxo de informação
-    ├── data-modeling/                 # Modelagem lógica, física (SQL) e documental
-    ├── data-storage/                  # Estratégia de armazenamento, persistência e backups
-    ├── data-security/                 # Segurança da informação, acessos e auditoria
-    └── data-integration/              # Mecanismos de integração, ETL e consistência
-```
+| **Data Architecture** | Visão geral dos componentes, fluxo simples de dados e perfis de acesso. | [docs/data-architecture/](docs/data-architecture/README.md) |
+| **Data Modeling** | Diagrama de entidades (hortas, canteiros, cultivos, colheitas), scripts SQL e fichas em papel. | [docs/data-modeling/](docs/data-modeling/README.md) |
+| **Data Storage** | Onde os dados ficam guardados (PostgreSQL), regras de persistência e plano de backup. | [docs/data-storage/](docs/data-storage/README.md) |
+| **Data Security** | Senhas seguras (Argon2id), tráfego criptografado (HTTPS) e controle de permissões. | [docs/data-security/](docs/data-security/README.md) |
+| **Data Integration** | Integração Web ↔ API, carga noturna de relatórios e prevenção de erros. | [docs/data-integration/](docs/data-integration/README.md) |
+| **Guia de Apresentação** | Roteiro rápido e divisão de falas da equipe para a banca avaliadora. | [docs/guia-apresentacao-equipe.md](docs/guia-apresentacao-equipe.md) |

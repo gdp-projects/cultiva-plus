@@ -1,112 +1,104 @@
 # Data Modeling (Modelagem de Dados)
 
-A [Arquitetura de Dados](../data-architecture/README.md) mostrou a **visão macro**: quais sistemas existem e como os dados circulam entre eles. Este módulo detalha a **visão estrutural e detalhada**: o **modelo lógico de cada um desses sistemas**, os modelos físicos relacionais e dimensionais, e a modelagem fora do meio digital.
-
-Todos os modelos de banco foram implementados em SQL (PostgreSQL 16) e **testados de ponta a ponta** com dados fictícios: criação dos bancos → carga de exemplo → ETL → consultas do BI.
+O módulo de **Data Modeling** é o coração técnico do **Cultiva Plus**. Ele detalha como cada informação das hortas comunitárias é estruturada, relacionada e armazenada, garantindo integridade transacional no dia a dia e simplicidade na geração de relatórios de produção.
 
 ---
 
-## 1. Coerência com a Data Architecture
+## 1. Mapa Conceitual do Domínio (Entidades Centrais)
 
-Cada sistema levantado na Arquitetura possui seu respectivo modelo:
+Para atender a um sistema de médio porte de forma robusta e sem redundâncias, o Cultiva Plus organiza seus dados em torno do ciclo produtivo das hortas:
 
-| # | Sistema | Tem banco próprio? | Modelo lógico / Descrição | Documento | Script SQL |
-|---|---|---|---|---|---|
-| 1 | Plataforma Web (Front-end) | Não | Sessão, *view models* das telas e formulários | [01-plataforma-web.md](01-plataforma-web.md) | — |
-| 2 | Sistema Administrativo (API) | Não (único acesso ao OLTP) | Recursos/DTOs, matriz de permissões e regras de negócio | [02-sistema-administrativo-api.md](02-sistema-administrativo-api.md) | — |
-| 3 | Banco Operacional (OLTP) | **Sim** — `cultiva_oltp` | Modelo **relacional normalizado (3FN)**, 19 entidades | [03-banco-operacional-oltp.md](03-banco-operacional-oltp.md) | [`01`](sql/01_oltp_schema.sql), [`02`](sql/02_oltp_dados_exemplo.sql) |
-| 4 | Data Warehouse (OLAP) | **Sim** — `cultiva_dw` | Modelo **dimensional** (5 fatos, 6 dimensões) + ETL | [04-data-warehouse-olap.md](04-data-warehouse-olap.md) | [`03`](sql/03_dw_schema.sql), [`04`](sql/04_etl_oltp_para_dw.sql) |
-| 5 | Sistema de BI & Relatórios | Usa o schema `bi` do DW | Camada semântica (views) + catálogo de painéis/KPIs e acesso por horta | [05-bi-relatorios.md](05-bi-relatorios.md) | [`05`](sql/05_bi_camada_semantica.sql), [`06`](sql/06_consultas_exemplo.sql) |
-| 6 | Infraestrutura e Nuvem | Hospeda os dois bancos | Implantação, usuários de banco, controle de cargas, backup e retenção | [06-infraestrutura-nuvem.md](06-infraestrutura-nuvem.md) | — |
-| 7 | Arquivo Físico | Papel / Armário | Gestão documental analógica das fichas de canteiro e listas de presença | [modelo-gestao-documental-fisica.md](modelo-gestao-documental-fisica.md) | — |
-
----
-
-## 2. Entidades Principais
-
-Modelamos **12 entidades de negócio** e **7 entidades de apoio** (total de 19 tabelas no OLTP).
-
-| # | Entidade de negócio | O que representa | Necessidade do negócio atendida |
-|---|---|---|---|
-| 1 | `USUARIO` | Pessoa cadastrada na plataforma | Dados dos participantes e membros |
-| 2 | `COMUNIDADE` | Associação, escola ou condomínio que mantém hortas | Conectar moradores, comunidades e responsáveis |
-| 3 | `HORTA` | Horta comunitária | Informações das hortas |
-| 4 | `MEMBRO_HORTA` | Vínculo usuário × horta e o papel (líder/membro) | Matriz de Perfis e Permissões |
-| 5 | `SOLICITACAO_ENTRADA` | Pedido para participar de uma horta | Aprovação e gestão de novos membros |
-| 6 | `CANTEIRO` | Espaço de cultivo dentro da horta | Informações dos espaços disponíveis |
-| 7 | `ESPECIE` | Catálogo de plantas | Informações sobre os cultivos |
-| 8 | `CULTIVO` | Um plantio (safra) em um canteiro | Acompanhamento dos cultivos |
-| 9 | `COLHEITA` | Cada colheita e o destino da produção | Histórico de safras e produtividade |
-| 10 | `MUTIRAO` | Evento coletivo de trabalho | Atividades comunitárias realizadas |
-| 11 | `PRESENCA_MUTIRAO` | Confirmação e presença em mutirão | Participação e engajamento dos membros |
-| 12 | `TAREFA` | Atividade atribuída a um membro | Organização das atividades rotineiras |
-
-**Apoio:** `PERFIL`, `PERMISSAO`, `PERFIL_PERMISSAO` (controle de acesso), `TIPO_TAREFA` (padronização de atividades), `DICA_CULTIVO` (compartilhamento de conhecimento), `AVISO` (comunicação interna) e `LOG_AUDITORIA` (rastreabilidade e segurança).
-
----
-
-## 3. Matriz Entidade × Sistema
-
-| Entidade | 1. Web | 2. API | 3. OLTP | 4. DW | 5. BI |
-|---|---|---|---|---|---|
-| `USUARIO` | `FormCadastro`, `UsuarioLogado` | valida, hash senha | `oltp.usuario` | `dim_membro` (sem PII) | contagem de voluntários |
-| `COMUNIDADE` + `HORTA` | `HortaPublicaVM` (mapa) | `HortaDTO` | `oltp.comunidade`, `oltp.horta` | `dim_horta` (SCD2) | filtro em todos os painéis |
-| `MEMBRO_HORTA` | `VinculoHorta` | checagem de permissão | `oltp.membro_horta` | — | `bi.acesso_horta` (segurança) |
-| `CANTEIRO` | `CanteiroVM` | `CanteiroDTO` | `oltp.canteiro` | `dim_canteiro` | `vw_ocupacao_mensal` |
-| `ESPECIE` | `CultivoVM.especie` | catálogo | `oltp.especie` | `dim_especie` | `vw_desempenho_safra` |
-| `CULTIVO` | `FormCultivo`, `CultivoVM` | regra de área do canteiro | `oltp.cultivo` | `fato_cultivo`, `fato_ocupacao_mensal` | `vw_desempenho_safra` |
-| `COLHEITA` | `FormColheita` | `ColheitaDTO` | `oltp.colheita` | `fato_colheita` | `vw_producao_mensal` |
-| `MUTIRAO` + `PRESENCA_MUTIRAO` | `MutiraoVM`, `FormMutirao` | controle de vagas | `oltp.mutirao`, `oltp.presenca_mutirao` | `fato_participacao_mutirao` | `vw_engajamento_mutiroes` |
-| `TAREFA` + `TIPO_TAREFA` | `TarefaVM`, `FormTarefa` | conclusão por responsável | `oltp.tarefa`, `oltp.tipo_tarefa` | `fato_tarefa`, `dim_tipo_tarefa` | `vw_desempenho_tarefas` |
-
----
-
-## 4. Contribuição do Data Modeling para o Negócio
-
-O Data Modeling complementa a arquitetura ao definir como as informações são organizadas e relacionadas dentro do banco de dados operacional e do Data Warehouse.
-No Cultiva Plus, relacionamentos bem definidos garantem integridade referencial estrita (ex.: um cultivo vinculado ao seu canteiro e horta correspondente, uma colheita vinculada à safra).
-
-A modelagem reduz duplicações desnecessárias, apoia a tomada de decisões através de esquemas dimensionais limpos para BI e atende aos objetivos de acessibilidade, simplicidade e agilidade da **GDP Projects**.
-
----
-
-## 5. Estrutura dos Arquivos
-
-```text
-docs/data-modeling/
-├── README.md                          # Este arquivo (visão geral, entidades e coerência)
-├── 01-plataforma-web.md               # Sistema 1: Front-end e View Models
-├── 02-sistema-administrativo-api.md   # Sistema 2: Back-end, DTOs e Permissões
-├── 03-banco-operacional-oltp.md       # Sistema 3: Modelo relacional 3FN
-├── 04-data-warehouse-olap.md          # Sistema 4: Esquema estrela e rotina de ETL
-├── 05-bi-relatorios.md                # Sistema 5: Camada semântica e KPIs
-├── 06-infraestrutura-nuvem.md         # Sistema 6: Ambientes, acessos e backups
-├── modelo-gestao-documental-fisica.md # Gestão de documentos analógicos (fichas em papel)
-└── sql/
-    ├── 01_oltp_schema.sql             # DDL do banco operacional OLTP
-    ├── 02_oltp_dados_exemplo.sql      # Seed com dados de teste
-    ├── 03_dw_schema.sql               # DDL de staging e esquema estrela
-    ├── 04_etl_oltp_para_dw.sql        # Procedimentos e extração incremental
-    ├── 05_bi_camada_semantica.sql     # Views semânticas do BI
-    └── 06_consultas_exemplo.sql       # Consultas analíticas de negócio
+```mermaid
+erDiagram
+    COMUNIDADE ||--o{ HORTA : mantem
+    HORTA ||--o{ CANTEIRO : divide-se
+    CANTEIRO ||--o{ CULTIVO : recebe
+    ESPECIE ||--o{ CULTIVO : cataloga
+    CULTIVO ||--o{ COLHEITA : produz
+    HORTA ||--o{ MUTIRAO : organiza
+    USUARIO ||--o{ PRESENCA_MUTIRAO : participa
+    MUTIRAO ||--o{ PRESENCA_MUTIRAO : registra
+    HORTA ||--o{ TAREFA : vincula
+    USUARIO ||--o{ TAREFA : executa
+    USUARIO ||--o{ MEMBRO_HORTA : vincula
+    HORTA ||--o{ MEMBRO_HORTA : possui
 ```
 
+### O que cada entidade representa:
+* **HORTA & COMUNIDADE:** O espaço físico mantido por uma associação de moradores ou escola.
+* **CANTEIRO:** Subdivisão física identificada (ex.: Canteiro 01, área de 12 m²).
+* **ESPECIE:** Catálogo de culturas (ex.: Alface, Coentro, Cenoura, Manjericão) com ciclo estimado de colheita.
+* **CULTIVO (Safra):** O plantio ativo em um canteiro, registrando data de semeadura e área ocupada.
+* **COLHEITA:** O resultado da produção (peso em kg ou maços) e o destino (consumo comunitário, doação ou feira de troca).
+* **MUTIRÃO & PRESENÇA:** Eventos coletivos de trabalho voluntário e o controle das horas dedicadas.
+* **TAREFA:** Atividades pontuais distribuídas aos voluntários (ex.: rega diária, adubação orgânica, capina).
+* **USUÁRIO & MEMBRO_HORTA:** Moradores e líderes cadastrados, controlados por papéis e permissões seguras.
+
 ---
 
-## 6. Como Executar os Scripts SQL (PostgreSQL 16)
+## 2. A Modelagem nos Dois Ambientes: Operacional vs. Analítico
 
-```bash
-cd docs/data-modeling/sql
-createdb cultiva_oltp
-createdb cultiva_dw
+Seguindo as melhores práticas para sistemas de médio porte, a modelagem foi dividida em duas visões complementares:
 
-psql -d cultiva_oltp -f 01_oltp_schema.sql
-psql -d cultiva_oltp -f 02_oltp_dados_exemplo.sql
+```mermaid
+flowchart LR
+    subgraph OLTP["1. Banco Operacional (cultiva_oltp)"]
+        direction TB
+        O1["19 Tabelas em 3ª Forma Normal"]
+        O2["Integridade estrita (Foreign Keys)"]
+        O3["Transações ACID rápidas"]
+    end
 
-psql -d cultiva_dw -f 03_dw_schema.sql
-psql -d cultiva_dw -f 04_etl_oltp_para_dw.sql
-psql -d cultiva_dw -f 05_bi_camada_semantica.sql
+    subgraph DW["2. Data Warehouse (cultiva_dw)"]
+        direction TB
+        D1["Modelo Estrela (Fatos + Dimensões)"]
+        D2["Camada Semântica (Views bi.vw_*)"]
+        D3["Consultas analíticas rápidas sem dados pessoais"]
+    end
 
-psql -d cultiva_dw -c "CALL etl.executar_carga();"
-psql -d cultiva_dw -f 06_consultas_exemplo.sql
+    OLTP -->|"Carga diária 02:00 (ETL)"| DW
 ```
+
+1. **Modelo Transacional Normalizado (OLTP - 3FN):**
+   * Focado em **evitar duplicidade** e garantir que nenhuma colheita seja salva sem cultivo válido ou que um canteiro tenha área extrapolada.
+   * Total de **19 tabelas** (12 de negócio + 7 de apoio: permissões, auditoria e avisos).
+2. **Modelo Dimensional Analítico (OLAP - Esquema Estrela):**
+   * Focado em **facilitar consultas de relatórios** para líderes e gestores da GDP Projects.
+   * Composto por **5 tabelas fato** (`fato_colheita`, `fato_cultivo`, `fato_ocupacao_mensal`, `fato_participacao_mutirao`, `fato_tarefa`) conectadas a **6 dimensões** (`dim_tempo`, `dim_horta`, `dim_canteiro`, `dim_especie`, `dim_membro`, `dim_tipo_tarefa`).
+
+---
+
+## 3. Modelagem Fora do Digital: Gestão Documental Física
+
+Reconhecendo a realidade das hortas comunitárias, onde nem sempre há conectividade à internet no campo, a modelagem se estende ao meio analógico:
+* **Ficha de Canteiro e Participação em Mutirões:** Formulário padronizado em papel impresso, arquivado em armário de aço na sede da horta.
+* **Sincronização:** Mensalmente, o líder local digita os registros das fichas na plataforma web e envia a foto digitalizada para a nuvem.
+
+---
+
+## 4. Estrutura Detalhada dos Documentos
+
+A documentação detalhada de cada camada está dividida nos seguintes arquivos:
+
+| Documento | Foco da Modelagem |
+| :--- | :--- |
+| [01-plataforma-web.md](01-plataforma-web.md) | **Interface & Formulários:** View Models de tela, dados de sessão e validações no cliente. |
+| [02-sistema-administrativo-api.md](02-sistema-administrativo-api.md) | **API & Negócio:** DTOs, regras de permissão por horta e transações seguras. |
+| [03-banco-operacional-oltp.md](03-banco-operacional-oltp.md) | **Banco Operacional:** DDL das 19 tabelas relacionais em 3FN, chaves primárias e regras `CHECK`. |
+| [04-data-warehouse-olap.md](04-data-warehouse-olap.md) | **Data Warehouse:** Esquema estrela, surrogate keys, histórico SCD Tipo 2 e lógica de extração. |
+| [05-bi-relatorios.md](05-bi-relatorios.md) | **BI & Indicadores:** Views semânticas (`bi.vw_*`), catálogo de KPIs e restrição de acesso por horta. |
+| [06-infraestrutura-nuvem.md](06-infraestrutura-nuvem.md) | **Infraestrutura:** Hospedagem dos bancos, usuários técnicos (`api_app`, `etl_leitor`) e agendamento. |
+| [modelo-gestao-documental-fisica.md](modelo-gestao-documental-fisica.md) | **Gestão Física:** Fichas em papel, código de identificação analógico e arquivo comunitário. |
+
+---
+
+## 5. Scripts SQL Disponíveis (`sql/`)
+
+Os scripts SQL prontos e testados para PostgreSQL 16 estão na subpasta `sql/`:
+
+* [`01_oltp_schema.sql`](sql/01_oltp_schema.sql): Criação do banco operacional `cultiva_oltp` e tabelas em 3FN.
+* [`02_oltp_dados_exemplo.sql`](sql/02_oltp_dados_exemplo.sql): Dados fictícios de teste (hortas, canteiros, safras e mutirões).
+* [`03_dw_schema.sql`](sql/03_dw_schema.sql): Criação do banco `cultiva_dw` com staging e esquema estrela.
+* [`04_etl_oltp_para_dw.sql`](sql/04_etl_oltp_para_dw.sql): Rotina de sincronização incremental.
+* [`05_bi_camada_semantica.sql`](sql/05_bi_camada_semantica.sql): Views analíticas para dashboards.
+* [`06_consultas_exemplo.sql`](sql/06_consultas_exemplo.sql): Consultas prontas respondendo a dúvidas de produção.

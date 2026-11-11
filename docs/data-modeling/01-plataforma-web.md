@@ -1,9 +1,6 @@
 # 1. Plataforma Web (Front-end)
 
-> **Sistema da Entrega 1:** Plataforma Web (Front-end)
-> **Responsabilidade:** interface responsiva para visitantes, moradores, líderes comunitários e gestores.
-
-Como a Plataforma Web não tem banco, o seu modelo lógico descreve **quais dados ela manipula**: a sessão do usuário, os *view models* de cada tela e os formulários que enviam dados para a API.
+A Plataforma Web é a interface responsiva utilizada por moradores, líderes comunitários, voluntários e visitantes para acessar o Cultiva Plus. Como o front-end não possui banco de dados próprio, sua modelagem define **quais estruturas de dados trafegam e são manipuladas na tela**: a sessão de autenticação, os modelos de exibição (*view models*) e os formulários enviados à API.
 
 ---
 

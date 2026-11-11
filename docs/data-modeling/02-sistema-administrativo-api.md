@@ -1,10 +1,8 @@
 # 2. Sistema Administrativo (Back-end / API)
 
-> **Sistema da Entrega 1:** Sistema Administrativo (Back-end / API)
-> **Responsabilidade:** regras de negócio e controle da Matriz de Perfis e Permissões.
-> **Armazena dados?** Não tem banco próprio: é a **única porta de entrada** do Banco Operacional. Toda leitura/escrita no OLTP passa por aqui, usando o usuário de banco `api_app`.
+O Sistema Administrativo é a camada de serviços e regras de negócio da plataforma. Ele é a **única porta de entrada** para o Banco Operacional: nenhuma aplicação acessa as tabelas diretamente. Toda leitura ou gravação passa pela validação de permissões e de regras antes de ser efetivada.
 
-O modelo lógico da API descreve **os recursos que ela expõe**, **como cada recurso é gravado no OLTP** e **como a permissão é verificada**.
+O modelo lógico da API descreve **os recursos que ela expõe (DTOs)**, como eles se mapeiam nas entidades do banco e como as regras de acesso são aplicadas.
 
 ---
 

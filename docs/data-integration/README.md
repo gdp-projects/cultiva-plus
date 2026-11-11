@@ -1,6 +1,6 @@
-# Entrega 7 — Data Integration (Integração de Dados)
+# Data Integration (Integração de Dados)
 
-> **Contexto na Arquitetura:** A **Entrega 1 (Data Architecture)** definiu os 6 sistemas do **Cultiva Plus** e o fluxo macro de informação, enquanto a **Entrega 2 (Data Modeling)** detalhou as estruturas lógicas e físicas de cada um. Esta **Entrega 7** especifica como os dados são **transmitidos, compartilhados, transformados e sincronizados** entre todos esses sistemas, garantindo resiliência a falhas e consistência de ponta a ponta.
+> **Contexto na Arquitetura:** A [Arquitetura de Dados](../data-architecture/README.md) definiu os 6 sistemas do **Cultiva Plus** e o fluxo macro de informação, enquanto a [Modelagem de Dados](../data-modeling/README.md) detalhou as estruturas lógicas e físicas de cada um. Este documento especifica como os dados são **transmitidos, compartilhados, transformados e sincronizados** entre todos esses sistemas, garantindo resiliência a falhas e consistência de ponta a ponta.
 
 ---
 

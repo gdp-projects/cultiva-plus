@@ -1,8 +1,8 @@
 # 6. Infraestrutura e Nuvem
 
-> **Sistema da Entrega 1:** Infraestrutura e Nuvem
-> **Responsabilidade:** hospedagem, manutenção e suporte — inclusive dos bancos e do processo de carga.
-> **Modelo lógico deste sistema:** onde cada base fica fisicamente, quem acessa o quê (usuários de banco), como as cargas são controladas e por quanto tempo cada dado é guardado.
+A infraestrutura do Cultiva Plus define os ambientes onde rodam a aplicação, os bancos de dados e as rotinas de sincronização, garantindo escalabilidade simples e baixo custo.
+
+O modelo descreve onde cada base fica fisicamente, as credenciais técnicas de acesso, o controle das cargas analíticas e a política de retenção dos dados.
 
 ---
 

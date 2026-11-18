@@ -30,6 +30,16 @@ O fluxo de dados da arquitetura contempla a circulação contínua das informaç
 
 > *Consulte o diagrama visual completo na raiz do projeto: [README.md](../../README.md).*
 
+```mermaid
+flowchart LR
+    A[Moradores / Líderes] -->|Acessam via Web| B[Plataforma Web]
+    B -->|Chamadas REST / JSON| C[API Backend]
+    C -->|Grava e consulta| D[(Banco Operacional - PostgreSQL)]
+    D -->|Carga diária 02h00| E[(Data Warehouse)]
+    E -->|Consultas rápidas| F[Relatórios e Dashboards]
+    D -.->|Backups automáticos| G[Armazenamento em Nuvem]
+```
+
 ---
 
 ## 3. Banco Operacional (OLTP) vs. Data Warehouse (OLAP)

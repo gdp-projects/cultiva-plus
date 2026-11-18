@@ -11,6 +11,32 @@ O modelo analítico utiliza o **Esquema Estrela**:
 * **Tabelas Dimensão:** Armazenam o contexto para filtragem e agrupamento (quando aconteceu, qual horta, qual espécie, quem participou).
 
 > *O diagrama analítico de fatos e dimensões está consolidado no [README.md](../../README.md) principal.*
+```mermaid
+erDiagram
+    DIM_TEMPO       ||--o{ FATO_COLHEITA             : "quando"
+    DIM_HORTA       ||--o{ FATO_COLHEITA             : "onde"
+    DIM_CANTEIRO    ||--o{ FATO_COLHEITA             : "qual canteiro"
+    DIM_ESPECIE     ||--o{ FATO_COLHEITA             : "o que"
+    DIM_MEMBRO      ||--o{ FATO_COLHEITA             : "quem registrou"
+
+    DIM_TEMPO       ||--o{ FATO_CULTIVO              : "ciclo do plantio"
+    DIM_HORTA       ||--o{ FATO_CULTIVO              : ""
+    DIM_CANTEIRO    ||--o{ FATO_CULTIVO              : ""
+    DIM_ESPECIE     ||--o{ FATO_CULTIVO              : ""
+
+    DIM_TEMPO       ||--o{ FATO_OCUPACAO_MENSAL      : "mês"
+    DIM_HORTA       ||--o{ FATO_OCUPACAO_MENSAL      : ""
+    DIM_CANTEIRO    ||--o{ FATO_OCUPACAO_MENSAL      : ""
+
+    DIM_TEMPO       ||--o{ FATO_PARTICIPACAO_MUTIRAO : "data"
+    DIM_HORTA       ||--o{ FATO_PARTICIPACAO_MUTIRAO : ""
+    DIM_MEMBRO      ||--o{ FATO_PARTICIPACAO_MUTIRAO : ""
+
+    DIM_TEMPO       ||--o{ FATO_TAREFA               : "datas"
+    DIM_HORTA       ||--o{ FATO_TAREFA               : ""
+    DIM_TIPO_TAREFA ||--o{ FATO_TAREFA               : ""
+    DIM_MEMBRO      ||--o{ FATO_TAREFA               : ""
+```
 
 ---
 

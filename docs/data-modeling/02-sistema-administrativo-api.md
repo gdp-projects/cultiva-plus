@@ -18,6 +18,62 @@ A API expõe objetos de transferência de dados (DTOs) que desacoplam os modelos
 * **`TarefaDTO`:** Atividade atribuída a membro com tipo, título, responsável, prazo e status.
 * **`SolicitacaoDTO`:** Pedido de entrada com status e motivo de recusa, se houver.
 
+```mermaid
+classDiagram
+    direction LR
+    class TokenClaims {
+        +sub : idUsuario
+        +perfilGlobal : string
+        +hortas : VinculoClaim[]
+        +exp : datetime
+    }
+    class VinculoClaim {
+        +idHorta : number
+        +perfil : LIDER_HORTA | MEMBRO
+    }
+    class HortaDTO {
+        +id, nome, bairro, cidade
+        +latitude, longitude
+        +status, visibilidade
+    }
+    class CanteiroDTO {
+        +id, idHorta, codigo
+        +areaM2, status
+    }
+    class CultivoDTO {
+        +id, idCanteiro, idEspecie
+        +dataPlantio, dataPrevistaColheita
+        +areaOcupadaM2, status
+    }
+    class ColheitaDTO {
+        +id, idCultivo, dataColheita
+        +quantidade, unidade, pesoKg, destino
+    }
+    class MutiraoDTO {
+        +id, idHorta, titulo, inicio, fim
+        +vagas, vagasRestantes, status
+    }
+    class PresencaDTO {
+        +idMutirao, idUsuario, status
+    }
+    class TarefaDTO {
+        +id, idHorta, tipo, titulo
+        +idResponsavel, prazo, status
+    }
+    class SolicitacaoDTO {
+        +id, idUsuario, idHorta
+        +status, motivoRecusa
+    }
+    TokenClaims "1" --> "0..*" VinculoClaim
+    HortaDTO "1" --> "0..*" CanteiroDTO
+    CanteiroDTO "1" --> "0..*" CultivoDTO
+    CultivoDTO "1" --> "0..*" ColheitaDTO
+    HortaDTO "1" --> "0..*" MutiraoDTO
+    MutiraoDTO "1" --> "0..*" PresencaDTO
+    HortaDTO "1" --> "0..*" TarefaDTO
+    HortaDTO "1" --> "0..*" SolicitacaoDTO
+```
+
 ## 2.2 Recursos × entidades × permissões
 
 | Recurso (endpoint) | Método | Grava/lê no OLTP | Permissão exigida | Perfis |
@@ -48,6 +104,21 @@ As permissões **não estão fixas no código**: ficam nas tabelas `PERFIL`, `PE
 4. Confere se o perfil do vínculo (`LIDER_HORTA` ou `MEMBRO`) contém a permissão requerida (caso contrário, retorna `403 Permissão Insuficiente`).
 5. Autorizado o acesso, executa a operação transacional no banco e registra log de auditoria quando for operação crítica.
 
+```mermaid
+flowchart TD
+    A[Requisição com token] --> B{Token válido?}
+    B -- não --> X1[401 Não autenticado]
+    B -- sim --> C{perfilGlobal = ADMIN_GERAL?}
+    C -- sim --> P[Permitido]
+    C -- não --> D[Descobre a horta do recurso<br/>ex.: tarefa -> id_horta]
+    D --> E{Usuário tem MEMBRO_HORTA<br/>ATIVO nessa horta?}
+    E -- não --> X2[403 Sem acesso a esta horta]
+    E -- sim --> F{PERFIL_PERMISSAO do papel<br/>contém a permissão exigida?}
+    F -- não --> X3[403 Permissão insuficiente]
+    F -- sim --> P
+    P --> G[Executa no OLTP em transação<br/>+ grava LOG_AUDITORIA quando sensível]
+```
+
 ## 2.4 Regras de negócio que a API garante (além das restrições do banco)
 
 | Regra | Entidades envolvidas |
@@ -69,3 +140,18 @@ O registro de colheita segue as seguintes etapas:
 3. Abre-se uma transação ACID no banco operacional: insere o registro em `colheita`, atualiza o status do `cultivo` para `COLHIDO` (se for o encerramento) e libera o `canteiro` para `DISPONIVEL` (se não houver outros cultivos ativos).
 4. Efetiva a transação (`COMMIT`), gerando a marca d'água (`atualizado_em`) para posterior extração pelo ETL.
 5. A API retorna `201 Created` com o `ColheitaDTO` atualizado para a interface.
+```mermaid
+sequenceDiagram
+    actor L as Líder (Web)
+    participant API as Sistema Administrativo
+    participant DB as Banco Operacional (OLTP)
+    L->>API: POST /cultivos/3/colheitas {quantidade: 8.5, unidade: KG, destino: DOACAO}
+    API->>API: valida token e permissão CULTIVO_GERENCIAR na horta do cultivo
+    API->>DB: BEGIN
+    API->>DB: INSERT INTO colheita (...)
+    API->>DB: UPDATE cultivo SET status = 'COLHIDO' (se marcada como última)
+    API->>DB: UPDATE canteiro SET status = 'DISPONIVEL' (se não restar cultivo ativo)
+    API->>DB: COMMIT
+    Note over DB: trigger atualiza atualizado_em<br/>(o ETL da madrugada leva a colheita ao DW)
+    API-->>L: 201 Created + ColheitaDTO
+```

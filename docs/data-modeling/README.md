@@ -8,6 +8,22 @@ O módulo de **Data Modeling** é o coração técnico do **Cultiva Plus**. Ele 
 
 Para atender a um sistema de médio porte de forma robusta e sem redundâncias, o Cultiva Plus organiza seus dados em torno do ciclo produtivo das hortas.
 
+```mermaid
+erDiagram
+    COMUNIDADE ||--o{ HORTA : mantem
+    HORTA ||--o{ CANTEIRO : divide-se
+    CANTEIRO ||--o{ CULTIVO : recebe
+    ESPECIE ||--o{ CULTIVO : cataloga
+    CULTIVO ||--o{ COLHEITA : produz
+    HORTA ||--o{ MUTIRAO : organiza
+    USUARIO ||--o{ PRESENCA_MUTIRAO : participa
+    MUTIRAO ||--o{ PRESENCA_MUTIRAO : registra
+    HORTA ||--o{ TAREFA : vincula
+    USUARIO ||--o{ TAREFA : executa
+    USUARIO ||--o{ MEMBRO_HORTA : vincula
+    HORTA ||--o{ MEMBRO_HORTA : possui
+```
+
 ### O que cada entidade representa:
 * **HORTA & COMUNIDADE:** O espaço físico mantido por uma associação de moradores ou escola.
 * **CANTEIRO:** Subdivisão física identificada (ex.: Canteiro 01, área de 12 m²).
@@ -27,6 +43,24 @@ Seguindo as melhores práticas para sistemas de médio porte, a modelagem foi di
 2. **Data Warehouse (cultiva_dw):** Modelo Estrela (5 Fatos e 6 Dimensões) e Camada Semântica (views `bi.vw_*`), alimentado diariamente às 02h00 via ETL para consultas analíticas rápidas sem dados pessoais.
 
 > *O diagrama completo do sistema (Arquitetura, Modelagem, Segurança e Integração) está centralizado no [README.md](../../README.md) principal.*
+```mermaid
+flowchart LR
+    subgraph OLTP["1. Banco Operacional (cultiva_oltp)"]
+        direction TB
+        O1["19 Tabelas em 3ª Forma Normal"]
+        O2["Integridade estrita (Foreign Keys)"]
+        O3["Transações ACID rápidas"]
+    end
+
+    subgraph DW["2. Data Warehouse (cultiva_dw)"]
+        direction TB
+        D1["Modelo Estrela (Fatos + Dimensões)"]
+        D2["Camada Semântica (Views bi.vw_*)"]
+        D3["Consultas analíticas rápidas sem dados pessoais"]
+    end
+
+    OLTP -->|"Carga diária 02:00 (ETL)"| DW
+```
 
 1. **Modelo Transacional Normalizado (OLTP - 3FN):**
    * Focado em **evitar duplicidade** e garantir que nenhuma colheita seja salva sem cultivo válido ou que um canteiro tenha área extrapolada.

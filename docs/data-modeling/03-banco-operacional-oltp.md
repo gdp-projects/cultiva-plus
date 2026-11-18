@@ -8,6 +8,27 @@ O banco de dados operacional (`cultiva_oltp`) gerencia as informações do dia a
 
 As **19 tabelas** do banco são organizadas em 4 domínios práticos:
 
+```mermaid
+erDiagram
+    COMUNIDADE       ||--o{ HORTA               : "mantém"
+    HORTA            ||--o{ CANTEIRO            : "dividida em"
+    CANTEIRO         ||--o{ CULTIVO             : "recebe"
+    ESPECIE          ||--o{ CULTIVO             : "plantada em"
+    CULTIVO          ||--o{ COLHEITA            : "gera"
+    HORTA            ||--o{ MUTIRAO             : "organiza"
+    MUTIRAO          ||--o{ PRESENCA_MUTIRAO    : "registra"
+    USUARIO          ||--o{ PRESENCA_MUTIRAO    : "confirma"
+    HORTA            ||--o{ TAREFA              : "possui"
+    USUARIO          |o--o{ TAREFA              : "responsável"
+    USUARIO          ||--o{ MEMBRO_HORTA        : "vincula"
+    HORTA            ||--o{ MEMBRO_HORTA        : "possui"
+    USUARIO          ||--o{ SOLICITACAO_ENTRADA : "pede"
+    HORTA            ||--o{ SOLICITACAO_ENTRADA : "recebe"
+    PERFIL           ||--o{ USUARIO             : "perfil"
+    USUARIO          ||--o{ AVISO               : "publica"
+    USUARIO          |o--o{ LOG_AUDITORIA       : "gera"
+```
+
 | Domínio | Entidades | Função |
 | :--- | :--- | :--- |
 | **Acesso e Pessoas** | `USUARIO`, `PERFIL`, `PERMISSAO`, `MEMBRO_HORTA`, `SOLICITACAO_ENTRADA` | Controla cadastros, login e quem é líder ou membro em cada horta. |

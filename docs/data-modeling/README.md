@@ -6,7 +6,7 @@ O módulo de **Data Modeling** é o coração técnico do **Cultiva Plus**. Ele 
 
 ## 1. Mapa Conceitual do Domínio (Entidades Centrais)
 
-Para atender a um sistema de médio porte de forma robusta e sem redundâncias, o Cultiva Plus organiza seus dados em torno do ciclo produtivo das hortas:
+Para atender a um sistema de médio porte de forma robusta e sem redundâncias, o Cultiva Plus organiza seus dados em torno do ciclo produtivo das hortas.
 
 ```mermaid
 erDiagram
@@ -39,7 +39,10 @@ erDiagram
 ## 2. A Modelagem nos Dois Ambientes: Operacional vs. Analítico
 
 Seguindo as melhores práticas para sistemas de médio porte, a modelagem foi dividida em duas visões complementares:
+1. **Banco Operacional (cultiva_oltp):** 19 tabelas em 3ª Forma Normal (3FN), com integridade estrita (Foreign Keys) e transações ACID rápidas para o dia a dia.
+2. **Data Warehouse (cultiva_dw):** Modelo Estrela (5 Fatos e 6 Dimensões) e Camada Semântica (views `bi.vw_*`), alimentado diariamente às 02h00 via ETL para consultas analíticas rápidas sem dados pessoais.
 
+> *O diagrama completo do sistema (Arquitetura, Modelagem, Segurança e Integração) está centralizado no [README.md](../../README.md) principal.*
 ```mermaid
 flowchart LR
     subgraph OLTP["1. Banco Operacional (cultiva_oltp)"]

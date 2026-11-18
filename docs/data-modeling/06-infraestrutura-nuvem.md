@@ -8,49 +8,23 @@ O modelo descreve onde cada base fica fisicamente, as credenciais técnicas de a
 
 ## 6.1 Onde cada dado mora (implantação)
 
-```mermaid
-flowchart TB
-    U[Usuários] -->|HTTPS| WEB[Plataforma Web<br/>hospedagem estática / CDN]
-    WEB -->|HTTPS + token| API[Sistema Administrativo<br/>container / serviço de aplicação]
-    subgraph PG1["Servidor PostgreSQL gerenciado - instância de produção"]
-        OLTP[(cultiva_oltp<br/>schema oltp)]
-    end
-    subgraph PG2["Servidor PostgreSQL gerenciado - instância analítica"]
-        DW[(cultiva_dw<br/>schemas stg, etl, dw, bi)]
-    end
-    API -->|usuário api_app| OLTP
-    JOB[Agendador<br/>02:00 diário] -->|CALL etl.executar_carga| DW
-    DW -->|postgres_fdw<br/>usuário etl_leitor| OLTP
-    BI[Ferramenta de BI] -->|usuário bi_leitor| DW
-    OLTP -.->|backup diário + PITR| BK[(Armazenamento<br/>de backups)]
-    DW -.->|backup semanal| BK
-```
+Os componentes de infraestrutura são organizados da seguinte forma:
+* **Front-end Web:** Hospedagem em serviço gerenciado/CDN estático com entrega via HTTPS.
+* **API Backend (Sistema Administrativo):** Executado em container/serviço gerenciado de aplicação.
+* **Instância de Produção:** Banco de dados relacional `cultiva_oltp` no PostgreSQL gerenciado, acessado pelo usuário técnico `api_app`.
+* **Instância Analítica:** Data Warehouse `cultiva_dw` contendo os schemas `stg`, `etl`, `dw` e `bi`.
+* **Rotina Agendada:** Agendador diário às 02h00 que executa a procedure `CALL etl.executar_carga()`, usando conexão segura via `postgres_fdw` com o usuário `etl_leitor`.
+* **Ferramenta de BI:** Conexão de leitura no schema `bi` via usuário `bi_leitor`.
+* **Object Storage:** Armazenamento seguro de backups automatizados diários (PITR) e dumps semanais.
 
 > Na fase inicial (poucas hortas), `cultiva_oltp` e `cultiva_dw` podem ficar **na mesma instância**, em bancos separados — o modelo não muda. Quando o volume crescer, o DW vai para uma instância própria sem alterar nenhum script, só o `oltp_host` do ETL.
 
 ## 6.2 Modelo lógico do controle de cargas (schema `etl`)
 
-```mermaid
-erDiagram
-    WATERMARK {
-        varchar     tabela_origem PK "ex.: colheita"
-        timestamptz ultimo_atualizado_em "maior atualizado_em já carregado"
-    }
-    EXECUCAO_CARGA {
-        int         id_execucao PK
-        timestamptz inicio
-        timestamptz fim
-        varchar     status "EM_EXECUCAO | SUCESSO | ERRO"
-        text        mensagem_erro
-    }
-    EXECUCAO_DETALHE {
-        int     id_execucao PK, FK
-        varchar etapa PK "EXTRACAO | DIMENSAO | FATO"
-        varchar tabela PK
-        int     linhas
-    }
-    EXECUCAO_CARGA ||--o{ EXECUCAO_DETALHE : "detalha"
-```
+O schema de controle de ETL monitora a consistência de cada execução com as seguintes tabelas:
+* **`watermark`:** Guarda o maior timestamp (`ultimo_atualizado_em`) já extraído por tabela de origem (ex.: `colheita`).
+* **`execucao_carga`:** Registra o início, fim, status (`EM_EXECUCAO`, `SUCESSO`, `ERRO`) e mensagem de erro, se houver.
+* **`execucao_detalhe`:** Detalha linha por linha cada etapa da carga (extração, dimensões, fatos) e o total de linhas processadas.
 
 Exemplo real após a primeira carga com os dados fictícios:
 

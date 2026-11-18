@@ -20,15 +20,15 @@ O sistema é dividido em **4 componentes principais** e **2 serviços de apoio**
 
 ## 2. Fluxo de Dados
 
-```mermaid
-flowchart LR
-    A[Moradores / Líderes] -->|Acessam via Web| B[Plataforma Web]
-    B -->|Chamadas REST / JSON| C[API Backend]
-    C -->|Grava e consulta| D[(Banco Operacional - PostgreSQL)]
-    D -->|Carga diária 02h00| E[(Data Warehouse)]
-    E -->|Consultas rápidas| F[Relatórios e Dashboards]
-    D -.->|Backups automáticos| G[Armazenamento em Nuvem]
-```
+O fluxo de dados da arquitetura contempla a circulação contínua das informações:
+* **Usuários (Moradores/Líderes)** acessam a **Plataforma Web**.
+* A Plataforma Web encaminha requisições síncronas REST/JSON para a **API Backend**.
+* A API Backend valida regras e permissões e executa leituras e gravações no **Banco Operacional (PostgreSQL)** em tempo real.
+* Diariamente às 02h00, o processo de ETL extrai os dados incrementais para o **Data Warehouse**.
+* O **BI e Painéis** consom dados consolidados do Data Warehouse para visualização gerencial.
+* O Banco Operacional realiza backups periódicos no **Armazenamento em Nuvem**.
+
+> *Consulte o diagrama visual completo na raiz do projeto: [README.md](../../README.md).*
 
 ---
 

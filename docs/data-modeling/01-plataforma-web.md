@@ -6,133 +6,24 @@ A Plataforma Web é a interface responsiva utilizada por moradores, líderes com
 
 ## 1.1 Modelo lógico — sessão e telas
 
-```mermaid
-classDiagram
-    direction LR
-    class Sessao {
-        +tokenAcesso : cookie HttpOnly
-        +expiraEm : datetime
-        +usuario : UsuarioLogado
-    }
-    class UsuarioLogado {
-        +idUsuario : number
-        +nome : string
-        +perfilGlobal : ADMIN_GERAL | MEMBRO
-        +vinculos : VinculoHorta[]
-        +permissoes : string[]
-    }
-    class VinculoHorta {
-        +idHorta : number
-        +nomeHorta : string
-        +papel : LIDER_HORTA | MEMBRO
-    }
-    class HortaPublicaVM {
-        +idHorta : number
-        +nome : string
-        +bairro : string
-        +cidade : string
-        +latitude : number
-        +longitude : number
-        +status : string
-    }
-    class PainelHortaVM {
-        +horta : HortaPublicaVM
-        +canteiros : CanteiroVM[]
-        +proximosMutiroes : MutiraoVM[]
-        +minhasTarefas : TarefaVM[]
-        +avisos : AvisoVM[]
-    }
-    class CanteiroVM {
-        +idCanteiro : number
-        +codigo : string
-        +areaM2 : number
-        +status : string
-        +cultivoAtual : CultivoVM
-    }
-    class CultivoVM {
-        +idCultivo : number
-        +especie : string
-        +dataPlantio : date
-        +dataPrevistaColheita : date
-        +status : string
-    }
-    class MutiraoVM {
-        +idMutirao : number
-        +titulo : string
-        +inicio : datetime
-        +vagasRestantes : number
-        +minhaPresenca : string
-    }
-    class TarefaVM {
-        +idTarefa : number
-        +titulo : string
-        +tipo : string
-        +prazo : date
-        +status : string
-        +atrasada : boolean
-    }
-    class AvisoVM {
-        +idAviso : number
-        +titulo : string
-        +mensagem : string
-        +publicadoEm : datetime
-    }
-    Sessao "1" --> "1" UsuarioLogado
-    UsuarioLogado "1" --> "0..*" VinculoHorta
-    PainelHortaVM "1" --> "1" HortaPublicaVM
-    PainelHortaVM "1" --> "0..*" CanteiroVM
-    CanteiroVM "1" --> "0..1" CultivoVM
-    PainelHortaVM "1" --> "0..*" MutiraoVM
-    PainelHortaVM "1" --> "0..*" TarefaVM
-    PainelHortaVM "1" --> "0..*" AvisoVM
-```
+As principais estruturas manipuladas no front-end são:
+* **`Sessao`:** Mantém o cookie `HttpOnly` com token de acesso seguro, data de expiração e dados do `UsuarioLogado`.
+* **`UsuarioLogado`:** Identificador do usuário, nome, perfil global (`ADMIN_GERAL` ou `MEMBRO`), vínculos com hortas e permissões.
+* **`VinculoHorta`:** Relaciona o usuário a uma horta específica com seu respectivo papel (`LIDER_HORTA` ou `MEMBRO`).
+* **`HortaPublicaVM`:** Dados públicos da horta para localização e consulta (id, nome, bairro, cidade, coordenadas e status).
+* **`PainelHortaVM`:** Agrupador da tela principal da horta, contendo canteiros, próximos mutirões, tarefas do usuário e avisos.
+* **`CanteiroVM` e `CultivoVM`:** Código do canteiro, área em m², status e informações do cultivo ativo (espécie, plantio, previsão).
+* **`MutiraoVM` e `TarefaVM`:** Detalhes de eventos comunitários (vagas, presença) e tarefas atribuídas com prazos e status.
 
 ## 1.2 Modelo lógico — formulários (dados que a Web envia)
 
-```mermaid
-classDiagram
-    direction LR
-    class FormCadastro {
-        +nome : string
-        +email : string
-        +telefone : string opcional
-        +senha : string
-        +aceiteTermos : boolean
-    }
-    class FormSolicitacaoEntrada {
-        +idHorta : number
-        +mensagem : string
-    }
-    class FormCultivo {
-        +idCanteiro : number
-        +idEspecie : number
-        +dataPlantio : date
-        +areaOcupadaM2 : number
-        +qtdMudas : number
-    }
-    class FormColheita {
-        +idCultivo : number
-        +dataColheita : date
-        +quantidade : number
-        +unidade : KG | UNIDADE | MACO
-        +pesoKg : number
-        +destino : string
-    }
-    class FormTarefa {
-        +idHorta : number
-        +idTipoTarefa : number
-        +titulo : string
-        +idResponsavel : number
-        +prazo : date
-    }
-    class FormMutirao {
-        +idHorta : number
-        +titulo : string
-        +inicio : datetime
-        +fim : datetime
-        +vagas : number
-    }
-```
+A plataforma envia dados para a API estruturados nos seguintes formulários:
+* **`FormCadastro`:** Dados para novo cadastro (nome, e-mail, telefone opcional, senha e aceite dos termos).
+* **`FormSolicitacaoEntrada`:** Pedido de ingresso do membro em uma horta específica.
+* **`FormCultivo`:** Abertura de safra em canteiro (espécie, data de plantio, área ocupada em m² e quantidade de mudas).
+* **`FormColheita`:** Lançamento de produção (safra, data, quantidade, unidade, peso em kg e destino da colheita).
+* **`FormTarefa`:** Cadastro de atividades para voluntários (horta, tipo da tarefa, título, responsável e prazo).
+* **`FormMutirao`:** Agendamento de mutirão coletivo (título, data/hora de início e fim, número de vagas).
 
 ## 1.3 Onde cada dado da Web fica e para onde vai
 

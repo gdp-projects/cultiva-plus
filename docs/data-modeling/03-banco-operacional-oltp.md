@@ -6,28 +6,7 @@ O banco de dados operacional (`cultiva_oltp`) gerencia as informações do dia a
 
 ## 3.1 Visão Geral do Modelo
 
-As **19 tabelas** do banco são agrupadas em 4 domínios práticos:
-
-```mermaid
-erDiagram
-    COMUNIDADE       ||--o{ HORTA               : "mantém"
-    HORTA            ||--o{ CANTEIRO            : "dividida em"
-    CANTEIRO         ||--o{ CULTIVO             : "recebe"
-    ESPECIE          ||--o{ CULTIVO             : "plantada em"
-    CULTIVO          ||--o{ COLHEITA            : "gera"
-    HORTA            ||--o{ MUTIRAO             : "organiza"
-    MUTIRAO          ||--o{ PRESENCA_MUTIRAO    : "registra"
-    USUARIO          ||--o{ PRESENCA_MUTIRAO    : "confirma"
-    HORTA            ||--o{ TAREFA              : "possui"
-    USUARIO          |o--o{ TAREFA              : "responsável"
-    USUARIO          ||--o{ MEMBRO_HORTA        : "vincula"
-    HORTA            ||--o{ MEMBRO_HORTA        : "possui"
-    USUARIO          ||--o{ SOLICITACAO_ENTRADA : "pede"
-    HORTA            ||--o{ SOLICITACAO_ENTRADA : "recebe"
-    PERFIL           ||--o{ USUARIO             : "perfil"
-    USUARIO          ||--o{ AVISO               : "publica"
-    USUARIO          |o--o{ LOG_AUDITORIA       : "gera"
-```
+As **19 tabelas** do banco são organizadas em 4 domínios práticos:
 
 | Domínio | Entidades | Função |
 | :--- | :--- | :--- |
@@ -35,6 +14,8 @@ erDiagram
 | **Espaços e Cultivos** | `COMUNIDADE`, `HORTA`, `CANTEIRO`, `ESPECIE`, `CULTIVO`, `COLHEITA` | Registra a horta física, canteiros, plantas, plantios e o peso colhido. |
 | **Atividades** | `MUTIRAO`, `PRESENCA_MUTIRAO`, `TIPO_TAREFA`, `TAREFA` | Organiza eventos coletivos de mutirão e tarefas atribuídas a membros. |
 | **Apoio e Controle** | `AVISO`, `DICA_CULTIVO`, `LOG_AUDITORIA` | Mural de notícias, dicas de horta e rastreamento de ações sensíveis. |
+
+> *O diagrama relacional unificado está disponível no [README.md](../../README.md) principal.*
 
 ---
 

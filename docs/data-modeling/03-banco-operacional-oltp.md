@@ -6,7 +6,7 @@ O banco de dados operacional (`cultiva_oltp`) gerencia as informações do dia a
 
 ## 3.1 Visão Geral do Modelo
 
-As **19 tabelas** do banco são agrupadas em 4 domínios práticos:
+As **19 tabelas** do banco são organizadas em 4 domínios práticos:
 
 ```mermaid
 erDiagram
@@ -35,6 +35,8 @@ erDiagram
 | **Espaços e Cultivos** | `COMUNIDADE`, `HORTA`, `CANTEIRO`, `ESPECIE`, `CULTIVO`, `COLHEITA` | Registra a horta física, canteiros, plantas, plantios e o peso colhido. |
 | **Atividades** | `MUTIRAO`, `PRESENCA_MUTIRAO`, `TIPO_TAREFA`, `TAREFA` | Organiza eventos coletivos de mutirão e tarefas atribuídas a membros. |
 | **Apoio e Controle** | `AVISO`, `DICA_CULTIVO`, `LOG_AUDITORIA` | Mural de notícias, dicas de horta e rastreamento de ações sensíveis. |
+
+> *O diagrama relacional unificado está disponível no [README.md](../../README.md) principal.*
 
 ---
 

@@ -10,6 +10,7 @@ O modelo analítico utiliza o **Esquema Estrela**:
 * **Tabelas Fato:** Armazenam as métricas numéricas das atividades (quilos colhidos, horas trabalhadas, áreas ocupadas).
 * **Tabelas Dimensão:** Armazenam o contexto para filtragem e agrupamento (quando aconteceu, qual horta, qual espécie, quem participou).
 
+> *O diagrama analítico de fatos e dimensões está consolidado no [README.md](../../README.md) principal.*
 ```mermaid
 erDiagram
     DIM_TEMPO       ||--o{ FATO_COLHEITA             : "quando"

@@ -6,7 +6,17 @@ O modelo lógico da API descreve **os recursos que ela expõe (DTOs)**, como ele
 
 ---
 
-## 2.1 Modelo lógico — recursos (DTOs) e entidades do OLTP
+## 2.1 Recursos (DTOs) e Entidades do OLTP
+
+A API expõe objetos de transferência de dados (DTOs) que desacoplam os modelos internos do banco da interface:
+* **`TokenClaims` & `VinculoClaim`:** Dados da sessão com identificador do usuário, perfil global e lista de hortas com seus respectivos papéis (`LIDER_HORTA` ou `MEMBRO`).
+* **`HortaDTO`:** Dados cadastrais da horta (nome, bairro, cidade, coordenadas, status e visibilidade).
+* **`CanteiroDTO`:** Identificação, código, área em m² e status do canteiro.
+* **`CultivoDTO`:** Registro do cultivo com canteiro, espécie, datas de plantio/previsão e área ocupada.
+* **`ColheitaDTO`:** Retorno do registro de colheita com quantidade, unidade, peso em kg e destino.
+* **`MutiraoDTO` & `PresencaDTO`:** Informações de eventos, cálculo de vagas restantes e confirmação individual de participação.
+* **`TarefaDTO`:** Atividade atribuída a membro com tipo, título, responsável, prazo e status.
+* **`SolicitacaoDTO`:** Pedido de entrada com status e motivo de recusa, se houver.
 
 ```mermaid
 classDiagram
@@ -87,7 +97,12 @@ classDiagram
 
 ## 2.3 Como a permissão é verificada
 
-As permissões **não estão escritas no código**: ficam nas tabelas `PERFIL`, `PERMISSAO` e `PERFIL_PERMISSAO` do OLTP. A API carrega essa matriz em cache e decide assim:
+As permissões **não estão fixas no código**: ficam nas tabelas `PERFIL`, `PERMISSAO` e `PERFIL_PERMISSAO` do OLTP. A API carrega essa matriz e valida cada requisição da seguinte forma:
+1. Valida se o token de acesso enviado é válido (caso contrário, retorna `401 Não Autenticado`).
+2. Se o usuário for `ADMIN_GERAL`, a permissão é concedida imediatamente.
+3. Se for usuário comum, identifica a horta alvo da operação e valida se o usuário possui vínculo ativo (`MEMBRO_HORTA`) naquela horta (caso contrário, retorna `403 Sem Acesso`).
+4. Confere se o perfil do vínculo (`LIDER_HORTA` ou `MEMBRO`) contém a permissão requerida (caso contrário, retorna `403 Permissão Insuficiente`).
+5. Autorizado o acesso, executa a operação transacional no banco e registra log de auditoria quando for operação crítica.
 
 ```mermaid
 flowchart TD
@@ -119,6 +134,12 @@ flowchart TD
 
 ## 2.5 Exemplo de fluxo: registrar uma colheita
 
+O registro de colheita segue as seguintes etapas:
+1. O líder da horta envia a requisição `POST /cultivos/3/colheitas` com quantidade, peso em kg e destino da produção.
+2. A API valida o token e confere a permissão `CULTIVO_GERENCIAR` para a respectiva horta.
+3. Abre-se uma transação ACID no banco operacional: insere o registro em `colheita`, atualiza o status do `cultivo` para `COLHIDO` (se for o encerramento) e libera o `canteiro` para `DISPONIVEL` (se não houver outros cultivos ativos).
+4. Efetiva a transação (`COMMIT`), gerando a marca d'água (`atualizado_em`) para posterior extração pelo ETL.
+5. A API retorna `201 Created` com o `ColheitaDTO` atualizado para a interface.
 ```mermaid
 sequenceDiagram
     actor L as Líder (Web)

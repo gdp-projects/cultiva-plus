@@ -18,6 +18,8 @@ flowchart LR
 2. **API ↔ Banco Operacional (Transacional):** A API valida as permissões e grava os dados nas tabelas do PostgreSQL com integridade imediata.
 3. **Banco Operacional ➔ Data Warehouse (Lote Noturno):** Todo dia às 02h00, uma rotina simples copia o que mudou para o banco analítico, **removendo nomes e contatos pessoais**, deixando apenas os números para os gráficos.
 
+> *Consulte o diagrama visual completo na raiz do projeto: [README.md](../../README.md).*
+
 ---
 
 ## 2. Exemplo Prático: Registrando uma Colheita
